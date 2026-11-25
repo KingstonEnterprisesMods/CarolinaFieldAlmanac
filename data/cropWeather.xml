@@ -1,0 +1,727 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!--
+Carolina Field Almanac - crop weather table. By Kingston Enterprises.
+
+Rule #1: every number here comes from a named Extension / university / USDA / peer-reviewed source.
+A blank value means "not sourced yet" - that rule stays OFF until the number is filled in.
+A crop that is not listed gets no weather effect.
+
+<growth>      degree-day clock from planting. method: "capped" = (min(hi,cap)+max(lo,base))/2 - base (corn/Purdue style)
+                                              "mean"   = (hi+lo)/2 - base, never below 0 (K-State MF-2234 style)
+<stage>       a crop stage, reached when the planting clock passes dd. dd blank = not sourced (stage never reached).
+<freezeTable> loss by heat units accumulated after a stage (K-State MF-2234 style). Row used = last row reached.
+              Before the first row: no number published = no effect.
+  <damage>    which column applies: lowBelowF (daily low strictly below) or lowAtOrBelowF.
+<freezeStage> fixed loss when the daily low hits a temperature while the crop is in a stage (from stage to untilStage).
+<weathering>  loss per inch of rain while the crop stands harvest-ready and unharvested.
+All losses are percent of yield. Several freezes: the worst one counts (no compounding - not in the sources).
+-->
+<cropWeather>
+    <!-- DROUGHT (v0.13): FAO Irrigation & Drainage Paper 56 (Allen et al. 1998) single-Kc root-zone water balance, Ch. 8 Eq. 82-86:
+         TAW = 1000 x (thetaFC - thetaWP) x Zr ; RAW = p x TAW ; p = p(Table 22) + 0.04 (5 - ETc), 0.1-0.8 ; Ks = (TAW - Dr)/((1 - p) TAW) when Dr > RAW.
+         ETo: Hargreaves, FAO-56 Eq. 52, Ra from Eq. 21-25 at the weather station's latitude (15th of the month).
+         Kc: FAO-56 Table 12 (ini / mid / end; ini from the crop group row where the crop row is blank; ranges -> high end).
+         Stage lengths: FAO-56 Table 11 (US row where printed; ranges -> high end) used as FRACTIONS of the game's own growth (growth state / harvest state).
+         Root depth: FAO-56 Table 22 maximum (high end), whole season. Initial depletion 0 (FAO-56: near field capacity after rain).
+         Yield: FAO-56 Eq. 90 / FAO-33 seasonal: loss % = 100 x Ky x (1 - sum ETa / sum ETc). Ky: FAO-56 Table 24 (seasonal).
+         No Ky published (barley, oats, canola, rice, vegetables except peas/beans/potato) = no drought effect (Rule #1).
+         SOIL: map Farmville NC = Pitt County NC. USDA Bureau of Soils, Soil Survey of Pitt County NC (Hearn et al., 1910), "Areas of different soils":
+         Norfolk fine sandy loam 161,920 acres = 38.9 % (largest type). FAO-56 Table 19, sandy loam: thetaFC - thetaWP = 0.11-0.15 -> 0.15 (high end). -->
+    <!-- BACKFILL (v0.14): <plant> = lead-state planting date, USDA NASS Crop Progress, 5-year average as published with the 2026 reports,
+         first week at or above 50 % planted (transplanted for tobacco). Used only for crops already growing when CFA first sees them:
+         clocks are rebuilt from that date to today with NOAA U.S. Climate Normals 1991-2020 DAILY normals for the weather station (CFANormals.lua). -->
+    <soil name="Norfolk fine sandy loam (Pitt County NC, largest type)" awc="0.15"/>
+    <!-- WATERLOGGING (v0.14.2):
+         Soil layers: USDA NRCS SSURGO, Pitt County NC (NC147, survey area version 9/4/2026), map unit NrB "Norfolk sandy loam, 1 to 6 percent
+         slopes" (largest Norfolk unit, 11,793 acres), major component Norfolk: water content at saturation (wsatiated_r) and at 1/3 bar
+         = field capacity (wthirdbar_r), percent by volume, representative values.
+         airFilled 0.15: Githui et al. 2022, Int. J. Plant Biol. 13:180, review of crop-model aeration stress: critical air-filled porosity
+         0.10-0.15 m3/m3 often assumed; AquaCrop 3 % (tolerant) to 15 % (sensitive) below saturation -> high end 0.15.
+         drainDays 3: UGA Extension B-892 (Moore & Sumner), "Drainage from saturation to field capacity for most soils used for tobacco
+         usually requires two to three days" -> high end 3.
+         A waterlogged day = root-zone air-filled pore space below airFilled. Losses: per-crop <waterlog> rules, worst one counts. -->
+    <soilLayer topCm="0" bottomCm="23" sat="0.38" fc="0.19"/>    <!-- Ap -->
+    <soilLayer topCm="23" bottomCm="38" sat="0.36" fc="0.13"/>   <!-- E -->
+    <soilLayer topCm="38" bottomCm="48" sat="0.41" fc="0.242"/>  <!-- Bt1 -->
+    <soilLayer topCm="48" bottomCm="254" sat="0.45" fc="0.252"/> <!-- Bt2 -->
+    <waterlogging airFilled="0.15" drainDays="3" depthM="0.30"/>   <!-- depthM: top 30 cm, as in DRAINMOD's SEW30 ("Sum of Excess Water in the top 30 cm"), Githui et al. 2022 -->
+    <!-- WIND (v0.19), the team's USDA RMA Cause of Loss files, cause "Wind/Excess Wind", lead state per crop, crop years 2001-2025:
+         chance (month 1-12) = wind net determined acres in that month / total NASS acres planted in the lead state (same as hail).
+         lossPct = (indemnity / net determined acres) / (liability / net planted quantity) on the wind rows.
+         Covers all insured wind loss (lodging, green snap, sandblasting). In game: the month's chance is spread over all days
+         of the month (wind is not limited to thunder days; Kansas wheat's wind losses peak in March). Peanut left out (RMA peanut
+         quantities are in pounds, the ratio is not usable). -->
+    <!-- HAIL (v0.12), from the team's USDA data, lead state per crop, crop years 2001-2025:
+         chance (month 1-12) = hail net determined acres in that month (USDA RMA Cause of Loss Summary of Business, cause "Hail")
+                               / total NASS acres planted in the lead state (NASS Quick Stats, AREA PLANTED, final YEAR value), summed over the years.
+         lossPct = insured hail loss share on hit acres = (indemnity / net determined acres) / (liability / net planted quantity) on the same hail rows.
+         Insurance counts only insured acres and pays above the deductible (team: "this is how insurance works").
+         In game: the month's chance is spread over CFA's thunder days; a hit multiplies (1 - loss). Full table: hail_lead_state_monthly.csv. -->
+
+    <!-- CORN: K-State MF-2234 (Staggenborg, Dhuyvetter, Fjell, Vanderlip 1996), Table 4, from Carter & Hesterman 1990 (Purdue NCH-57).
+         Leaves damaged below 29 F (Rahn & Brown 1971); 28 F or lower = extremely hard freeze, ear shank damage.
+         Heat units after silk: (Tmax+Tmin)/2 - 50. -->
+    <crop fruit="MAIZE">
+        <growth method="capped" baseF="50" capF="86"/>
+        <plant state="IA" month="5" day="10"/>   <!-- NASS Iowa corn, week ending May 10 (63 %) -->
+        <plantIn country="CA" state="QC" month="5" day="15"/>   <!-- v0.29.8 (team: Quebec from variety trials): RGCQ / CEROM Quebec variety-trial sowing dates, mean of trial sites, years 2021, 2022, 2023, 2025 (2024 report not found): grain corn May 14, 13, 17, 18 -->
+        <plantIn country="CA" state="ON" month="5" day="3"/>   <!-- v0.29.8 (team: government advice, middle of window): OMAFA Field Crop News, "the best yields in Ontario are usually obtained from corn planted in late April and the first half of May" (Apr 21 - May 15) -->
+        <plantIn country="PL" month="4" day="29"/>   <!-- v0.29.6: COBORU post-registration variety trials (PDO), mean sowing date of all trial sites, grain maize, harvest years 2020-2024 (WPDO Kukurydza 2021-2024): Apr 25, 30, 30, 30, 29 -->
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <plantIn country="DE" month="4" day="27"/>   <!-- v0.29.3: DWD phenology annual reporters, sowing (Bestellung) median of all reports, mean of the last 5 full years (2019-2023), Mais -->
+        <plantIn country="FR" month="4" day="27"/>   <!-- v0.29.3: FranceAgriMer Cere'Obs, national 5-yr avg 2021-2025, first week ending at or above 50 % sown (same rule as NASS): maize grain, wk ending Apr 27 (59 %) -->
+        <!-- v0.14 stages: Iowa State PMR 1009 (Corn Growth and Development) GDD from planting, base 50 / cap 86, via Montana Climate Office / NDAWN -->
+        <stage name="VE" dd="120"/> <stage name="V2" dd="200"/> <stage name="V3" dd="350"/> <stage name="V6" dd="475"/> <stage name="V9" dd="610"/>
+        <stage name="V10" dd="740"/> <stage name="VT" dd="1135"/>
+        <stage name="silk" dd="1400"/>   <!-- U of Kentucky AGR-202 (Lee): 2700 GDD hybrid, R1 silking 1400 (citing Iowa State PMR 1009). 2700-1400 = 1300 = K-State black layer row. -->
+        <stage name="R2" dd="1660"/> <stage name="R4" dd="1925"/> <stage name="R5" dd="2450"/> <stage name="R6" dd="2700"/>   <!-- Iowa State PMR 1009 -->
+        <!-- v0.14.2 waterlogging, corn. Each rule = the study's LONGEST duration with its HIGH-end loss (both ends of the published ranges).
+             Ohio State C.O.R.N. 2022-18: waterlogged at V4-V5 for 3-4 days reduced yield 25-45 % (pre-plant N only).
+             Kaur et al. 2019 (via Nebraska CropWatch): V3, 7 days 16-38 %; V6, 1-7 days 10-36 %. -->
+        <waterlog fromStage="V3" untilStage="V6" days="4" loss="45" source="Ohio State 2022, V4-V5 3-4 days"/>
+        <waterlog fromStage="V3" untilStage="V6" days="7" loss="38" source="Kaur 2019, V3 7 days"/>
+        <waterlog fromStage="V6" untilStage="V9" days="7" loss="36" source="Kaur 2019, V6 1-7 days"/>
+        <!-- v0.25.8 HEAT AT POLLINATION (team 2026-11-07): UNL CropWatch, Hoegemeyer, Brhel, Dutcher & Williams, July 19, 2019,
+             "How Extended High Heat Disrupts Corn Pollination": "Heat over 95°F depresses pollen production"; "one day of 95-98°F has little
+             or no impact on yields"; "after the fourth consecutive day, there tends to be a 1% loss in yield for each day above that temperature".
+             Window = pollen shed and silking: VT (tassel) until R2 (blister, pollination over) - Iowa State PMR 1009 stages above.
+             Days are real days in a row (game days x real days per game day). Heat only: the FAO-56 drought model covers dry soil, so the
+             SDSU drought-plus-heat 3-8 %/day is not stacked on top. -->
+        <pollinationHeat fromStage="VT" untilStage="R2" atOrAboveF="95" freeDays="4" lossPerDay="1" source="UNL CropWatch 2019, heat at pollination"/>
+        <freezeTable after="silk" method="mean" baseF="50">
+            <damage name="leaves" lowBelowF="29">
+                <row hu="600" loss="35"/> <row hu="700" loss="26"/> <row hu="800" loss="18"/> <row hu="900" loss="11"/>
+                <row hu="1000" loss="6"/> <row hu="1100" loss="3"/> <row hu="1200" loss="0"/> <row hu="1300" loss="0"/>
+            </damage>
+            <damage name="earShank" lowAtOrBelowF="28">
+                <row hu="600" loss="58"/> <row hu="700" loss="45"/> <row hu="800" loss="33"/> <row hu="900" loss="22"/>
+                <row hu="1000" loss="12"/> <row hu="1100" loss="5"/> <row hu="1200" loss="1"/> <row hu="1300" loss="0"/>
+            </damage>
+        </freezeTable>
+    <hail state="IA" lossPct="28.7969" chance="0.000008 0.000001 0.000001 0.000002 0.000068 0.001489 0.000977 0.000949 0.000158 0.000086 0.000091 0.000030"/>
+    <wind state="IA" lossPct="28.1704" chance="0.000006 0.000000 0.000001 0.000001 0.000065 0.000574 0.001367 0.004492 0.000370 0.000286 0.000149 0.000067"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", IA, 2001-2025, same method as hail -->
+        <!-- v0.21.8 CORN LEFT STANDING (team OK): U of Wisconsin, Lauer 2004 (Wisconsin Corn Agronomy W160), Table 1, Arlington WI, grain yield
+             of corn left standing vs October harvest, by month Nov-Apr (percent change worked out from his bu/A): 2000-01 heavy snow cover
+             +1 (no gain used) -45 -58 -59 -65 -38; 2001-02 little snow cover -5 -5 -9 -18 -7 -10. Not the lead state (no Iowa table found).
+             Which winter: the farm's snow days since Nov 1 vs NOAA GHCN-Daily Madison WI (nearest NOAA station to Arlington) in 2000-01:
+             8 24 26 33 38 39 by the end of Nov..Apr (a snow day = 0.01 in or more precipitation with snowfall, as CFA counts it).
+             At or above that count = heavy row, else light row. Applies only to a harvest-ready crop.
+             v0.21.9 (team): the loss never goes back down (heavy-year April 38 % is below March 65 %; standing corn cannot regain yield). -->
+        <winterStand heavy="0 45 58 59 65 38" light="5 5 9 18 7 10" heavyDays="8 24 26 33 38 39" source="U of Wisconsin, Lauer 2004, Arlington WI"/>
+        <drought ky="1.25" kcIni="0.3" kcMid="1.20" kcEnd="0.60" lIni="30" lDev="40" lMid="50" lLate="50" rootM="1.7" p="0.55"/>   <!-- Kc Table 12 field corn (end 0.60-0.35 -> 0.60), cereals ini 0.3; Table 11 Idaho USA (April) 30/40/50/50; Ky Table 24; root/p Table 22 -->
+    </crop>
+
+    <!-- SORGHUM: K-State MF-2234 Table 2 (Staggenborg & Vanderlip 1996, Agron. J. 88:473). No loss at 32 F;
+         28 F or lower for 2 h or more = maximum damage. Heat units after anthesis: (Tmax+Tmin)/2 - 42. -->
+    <crop fruit="SORGHUM">
+        <plant state="KS" month="6" day="14"/>   <!-- NASS Kansas sorghum, week ending Jun 14 (60 %) -->
+        <growth method="capped" baseF="50" capF="100"/>   <!-- Texas A&M AgriLife SCSC-PU-069 (Gerik, Bean, Vanderlip 2022): 50 F base, 100 F upper, both clipped -->
+        <stage name="anthesis" dd="1995"/>   <!-- same pub. Table 1 flowering, long-season hybrid (team); short-season is 1848 -->
+        <freezeTable after="anthesis" method="mean" baseF="42">
+            <damage name="freeze" lowAtOrBelowF="28" minHours="2">   <!-- MF-2234: maximum damage at 28 F or lower for 2 hours or more -->
+                <row hu="500" loss="52"/> <row hu="700" loss="38"/> <row hu="900" loss="27"/> <row hu="1100" loss="18"/>
+                <row hu="1300" loss="11"/> <row hu="1500" loss="5"/> <row hu="1700" loss="2"/> <row hu="1900" loss="0"/>
+            </damage>
+        </freezeTable>
+    <hail state="KS" lossPct="41.9642" chance="0.000035 0.000001 0.000003 0.000007 0.000113 0.001441 0.003022 0.003168 0.001645 0.000542 0.000135 0.000052"/>
+    <wind state="KS" lossPct="36.5304" chance="0.000002 0.000000 0.000000 0.000000 0.000086 0.000506 0.000205 0.000213 0.000159 0.000364 0.000286 0.000069"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", KS, 2001-2025, same method as hail -->
+        <drought ky="0.9" kcIni="0.3" kcMid="1.10" kcEnd="0.55" lIni="20" lDev="35" lMid="40" lLate="30" rootM="2.0" p="0.55"/>   <!-- grain sorghum mid 1.00-1.10 -> 1.10; Table 11 USA, Pakis., Med. (May/June) 20/35/40/30; Ky Table 24; root/p Table 22 -->
+    </crop>
+
+    <!-- SOYBEAN: K-State MF-2234 Table 5 (Saliba et al. 1982, Crop Sci. 22:73). Leaves not damaged until 26 F.
+         K-State: heat units do NOT work for soybean stages (day-length crop) - stage timing still to source. -->
+    <crop fruit="SOYBEAN">
+        <plant state="IL" month="5" day="17"/>   <!-- NASS Illinois soybeans, week ending May 17 (63 %) -->
+        <plantIn country="CA" state="QC" month="5" day="22"/>   <!-- v0.29.8 (team: Quebec from variety trials): RGCQ / CEROM Quebec variety-trial sowing dates, mean of trial sites, years 2021, 2022, 2023, 2025 (2024 report not found): soybeans May 19, 22, 20, 27 -->
+        <plantIn country="CA" state="ON" month="5" day="1"/>   <!-- v0.29.8 (team: government advice, middle of window): Grain Farmers of Ontario / University of Guelph 2025 summary, "plant soybean in late April or early May" (Apr 21 - May 10) -->
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <growth method="capped" baseF="50" capF="86"/>
+        <!-- v0.12 stage timing, in real days after planting (lead state Illinois):
+             R1 = USDA NASS Crop Progress, Illinois soybeans, 5-year average (as published with the 2026 reports): first week at or above
+             50 % planted = week ending May 17 (63 %); first week at or above 50 % blooming = week ending Jul 19 (65 %) -> 63 days.
+             R2-R8 = USDA RMA FCIC-25440 Soybean Loss Adjustment Standards Handbook (Dec 2025), Exhibit 17, "time interval in days from
+             last stage": R2 3, R3 7, R4 9, R5 9, R6 15, R6.5 9, R7 9, R8 9; half stages = half the days between whole stages (handbook text).
+             No interpolation between NASS weeks (the team's rule). -->
+        <stage name="R1" days="63"/> <stage name="R2" days="66"/> <stage name="R3" days="73"/> <stage name="R4" days="82"/>
+        <stage name="R5" days="91"/> <stage name="R5.5" days="98.5"/> <stage name="R6" days="106"/> <stage name="R6.5" days="115"/>
+        <stage name="R7" days="124"/> <stage name="R7.5" days="128.5"/> <stage name="R8" days="133"/>
+        <freezeStage stage="R5"   untilStage="R5.5" lowAtOrBelowF="26" loss="65.4"/>
+        <freezeStage stage="R5.5" untilStage="R6"   lowAtOrBelowF="26" loss="51.0"/>
+        <freezeStage stage="R6"   untilStage="R6.5" lowAtOrBelowF="26" loss="37.1"/>
+        <freezeStage stage="R6.5" untilStage="R7"   lowAtOrBelowF="26" loss="23.9"/>
+        <freezeStage stage="R7"   untilStage="R7.5" lowAtOrBelowF="26" loss="11.4"/>
+    <hail state="IL" lossPct="14.7686" chance="0.000000 0.000000 0.000000 0.000003 0.000220 0.000125 0.000112 0.000084 0.000079 0.000035 0.000024 0.000006"/>
+    <wind state="IL" lossPct="12.8218" chance="0.000000 0.000000 0.000000 0.000001 0.000015 0.000009 0.000025 0.000007 0.000004 0.000008 0.000007 0.000004"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", IL, 2001-2025, same method as hail -->
+        <drought ky="0.85" kcIni="0.4" kcMid="1.15" kcEnd="0.50" lIni="20" lDev="35" lMid="60" lLate="25" rootM="1.3" p="0.50"/>   <!-- legumes ini 0.4; Table 11 Central USA (May) 20/30-35/60/25; Ky Table 24; root/p Table 22 -->
+        <!-- v0.14.2 waterlogging, soybean (Ohio State C.O.R.N. 2022-18, high ends): flooding 7 days or more in vegetative stages 17-63 %;
+             4 days or more during R2-R5 25-85 %. (Up to 4 days at V4-V5 "may not impact seed yield"; UMN: 48 h tolerated.) -->
+        <waterlog fromStage="" untilStage="R1" days="7" loss="63" source="Ohio State 2022, vegetative 7+ days"/>
+        <waterlog fromStage="R2" untilStage="R6" days="4" loss="85" source="Ohio State 2022, R2-R5 4+ days"/>
+        <!-- v0.20.1 HEAT (team OK): Illinois (lead state), Siebers et al. 2015, Global Change Biology 21:3114-3125 (SoyFACE, U of Illinois):
+             field heat waves raising canopy temperature 6 C (10.8 F) day and night for 3 days during EARLY POD development cut seed yield about 10 %;
+             heat waves in late reproductive stages: no significant loss. In game: the day's high at least 10.8 F above the NOAA 1991-2020 daily
+             normal high for the station, 3 days in a row, from R3 (beginning pod) until R5 (beginning seed). Counts once per field. -->
+        <heatWave fromStage="R3" untilStage="R5" aboveNormalF="10.8" days="3" loss="10" source="Illinois, Siebers 2015, 3-day +6 C heat wave at early pod"/>
+        <!-- v0.21.7 HARVEST DELAY (team OK): Wisconsin, Philbrook &amp; Oplinger 1989 (not the lead state; Illinois Agronomy Handbook has no shatter %):
+             0.2 % yield loss per day after R8 (full maturity) while the crop stands unharvested. Days are real days (scaled like the clocks). -->
+        <harvestDelay fromStage="R8" lossPerDay="0.2" source="Wisconsin, Philbrook and Oplinger 1989, 0.2 pct per day after R8"/>
+    </crop>
+
+    <!-- BARLEY / OATS: Mamaev 1981, Trudy VNII Meteorologii 3:81-92 (abstract). Emergence/tillering -8 C: no loss.
+         Flowering -4 C (24.8 F) 50 %, -6 C (21.2 F) 73-77 %. Milk-ripe -8 C (17.6 F) 33 %, -10 C (14 F) 50 %.
+         Stage clocks below follow each stage source's own base and rules. -->
+    <crop fruit="BARLEY" plantedMonths="8 9 10 11 12 1 2">
+        <!-- v0.25.12 FALL-SOWN BARLEY (team 2026-11-09). USDA-ARS 2003-04 Uniform Winter Barley Yield Trial, Kinston NC (home state):
+             planted Oct 24 2003, heading date mean Julian 98.5 (Apr 7-8 2004), harvested Jun 7 2004 -> heading 166 days, harvest 227 days.
+             (Other sites: Clemson SC 157/207, Griffin GA 154/218, Warsaw VA 188/235.) One season - use until more is in hand.
+             Freeze window = the spring rows' flowering -> watery ripe (seed fill), 319 NDAWN GDD (1745 - 1426). From Apr 8 at NOAA 1991-2020
+             daily normals for Goldsboro NC (USW00013713, nearest normals station to Kinston) 319 GDD takes 11 days -> seed fill at 177 days.
+             NDAWN: flowering begins at mid-boot, before heading, so this window starts at heading (inside the flowering stretch).
+             Milk / dough not dated = milk rules off, as in the spring entry. -->
+        <plant state="NC" month="10" day="24"/>
+        <plantIn country="IE" month="10" day="5"/>   <!-- v0.29.7 (team: Teagasc advice, middle of window): Teagasc "Hold your horses on sowing winter barley" (2024): ideal window late September to mid-October -->
+        <plantIn country="GB" state="GBENG" month="9" day="26"/>   <!-- v0.29.6: AHDB Arable Crop Condition Report (November), GB, share drilled per month, 50 % point assuming even drilling within the month, mean of 2021, 2022, 2024, 2025 (2023 report gave no split): winter barley Sep 57, 60, 54, 64 -> Sep 26, 25, 28, 23 -->
+        <plantIn country="GB" state="GBSCT" month="9" day="26"/>   <!-- v0.29.6: AHDB Arable Crop Condition Report (November), GB, share drilled per month, 50 % point assuming even drilling within the month, mean of 2021, 2022, 2024, 2025 (2023 report gave no split): winter barley Sep 57, 60, 54, 64 -> Sep 26, 25, 28, 23 -->
+        <plantIn country="GB" state="GBWLS" month="9" day="26"/>   <!-- v0.29.6: AHDB Arable Crop Condition Report (November), GB, share drilled per month, 50 % point assuming even drilling within the month, mean of 2021, 2022, 2024, 2025 (2023 report gave no split): winter barley Sep 57, 60, 54, 64 -> Sep 26, 25, 28, 23 -->
+        <plantIn country="PL" month="9" day="25"/>   <!-- v0.29.6: COBORU post-registration variety trials (PDO), mean sowing date of all trial sites, winter barley, harvest years 2021-2025: Sep 24, 24, 25, 27, 27 -->
+        <plantIn country="DE" month="9" day="24"/>   <!-- v0.29.3: DWD phenology annual reporters, sowing (Bestellung) median of all reports, mean of the last 5 full years (2019-2023), Wintergerste -->
+        <plantIn country="FR" month="10" day="19"/>   <!-- v0.29.3: FranceAgriMer Cere'Obs, national 5-yr avg 2021-2025, first week ending at or above 50 % sown (same rule as NASS): winter barley, wk ending Oct 19 (59 %) -->
+        <stage name="flowering" days="166"/> <stage name="seedfill" days="177"/> <stage name="mature" days="227"/>
+        <freezeStage stage="flowering" untilStage="seedfill" lowAtOrBelowF="24.8" loss="50"/>
+        <freezeStage stage="flowering" untilStage="seedfill" lowAtOrBelowF="21.2" lossLow="73" lossHigh="77"/>
+        <hail state="ID" lossPct="33.5541" chance="0.000000 0.000000 0.000000 0.000060 0.000547 0.001794 0.004178 0.008708 0.000825 0.000579 0.000000 0.000000"/>
+        <wind state="ID" lossPct="15.0463" chance="0.000003 0.000000 0.000037 0.000526 0.000627 0.000197 0.000119 0.000283 0.000256 0.000000 0.000003 0.000000"/>
+        <drought ky="0.37" kcIni="0.3" kcMid="1.15" kcEnd="0.25" lIni="20" lDev="25" lMid="60" lLate="30" rootM="1.5" p="0.55"/>
+    </crop>
+
+    <crop fruit="BARLEY">
+        <plant state="ID" month="4" day="26"/>   <!-- NASS Idaho barley, week ending Apr 26 (55 %) -->
+        <plantIn country="CA" state="QC" month="5" day="12"/>   <!-- v0.29.8 (team: Quebec from variety trials): RGCQ / CEROM Quebec variety-trial sowing dates, mean of trial sites, years 2021, 2022, 2023, 2025 (2024 report not found): barley May 6, 13, 14, 15 -->
+        <plantIn country="CA" state="ON" region="southwest" month="4" day="10"/>   <!-- v0.29.8: OMAFRA Agronomy Guide (Pub. 811) ch. 4, target date for spring cereals, southwestern Ontario -->
+        <plantIn country="CA" state="ON" region="central" month="4" day="15"/>   <!-- v0.29.8: OMAFRA Agronomy Guide ch. 4, central and eastern Ontario -->
+        <plantIn country="CA" state="ON" region="north" month="5" day="10"/>   <!-- v0.29.8: OMAFRA Agronomy Guide ch. 4, northern Ontario -->
+        <plantIn country="IE" month="3" day="23"/>   <!-- v0.29.7 (team: Teagasc advice, middle of window): Teagasc Spring Barley Guide: top-yield reference crops sown 10 March - 4 April -->
+        <plantIn country="PL" month="3" day="29"/>   <!-- v0.29.6: COBORU post-registration variety trials (PDO), mean sowing date of all trial sites, spring barley 2021-2025: Apr 2, Mar 26, Apr 1, Mar 29, Mar 23 -->
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <plantIn country="DE" month="3" day="28"/>   <!-- v0.29.3: DWD phenology annual reporters, sowing (Bestellung) median of all reports, mean of the last 5 full years (2019-2023), Sommergerste -->
+        <plantIn country="FR" month="3" day="2"/>   <!-- v0.29.3: FranceAgriMer Cere'Obs, national 5-yr avg 2021-2025, first week ending at or above 50 % sown (same rule as NASS): spring barley, wk ending Mar 2 (59 %) -->
+        <!-- NDAWN / NDSU (Bauer et al. 1992), via Montana Climate Office: base 32 F; max and min below 32 set to 32;
+             max capped at 70 F until Haun 2.0 (384 GDD), then 95 F. Flowering begins at mid-boot (Haun 9.5) 1426; kernel watery ripe (11.5) 1745.
+             Milk / dough not numbered = milk rules off. Single published numbers only (team: no midpoints). -->
+        <growth method="ndawn" baseF="32" capF="95" earlyCapF="70" switchDD="384"/>
+        <stage name="flowering" dd="1426"/> <stage name="seedfill" dd="1745"/> <stage name="milk" dd=""/> <stage name="dough" dd=""/>
+        <freezeStage stage="flowering" untilStage="seedfill" lowAtOrBelowF="24.8" loss="50"/>
+        <freezeStage stage="flowering" untilStage="seedfill" lowAtOrBelowF="21.2" lossLow="73" lossHigh="77"/>
+        <freezeStage stage="milk"      untilStage="dough" lowAtOrBelowF="17.6" loss="33"/>
+        <freezeStage stage="milk"      untilStage="dough" lowAtOrBelowF="14"   loss="50"/>
+        <!-- v0.11.8: the stage numbers above are from SPRING-sown crops. A crop planted Aug-Feb (fall / winter sowing) has no sourced
+             stage clock yet, so its freeze rules stay OFF (Rule #1). Months: 1 = Jan ... 12 = Dec. -->
+        <freezeOff plantedMonths="8 9 10 11 12 1 2"/>
+    <hail state="ID" lossPct="33.5541" chance="0.000000 0.000000 0.000000 0.000060 0.000547 0.001794 0.004178 0.008708 0.000825 0.000579 0.000000 0.000000"/>
+    <wind state="ID" lossPct="15.0463" chance="0.000003 0.000000 0.000037 0.000526 0.000627 0.000197 0.000119 0.000283 0.000256 0.000000 0.000003 0.000000"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", ID, 2001-2025, same method as hail -->
+        <!-- v0.19 DROUGHT (team): Ky 0.37 = (1 - 6297/6936) / (1 - 0.75): Idaho (lead state) deficit irrigation at Aberdeen, ID
+             (Agronomy Journal, adjunct and all-malt barley), grain yield averaged over 5 genotypes at 100 % vs 75 % of crop ET. Not a published Ky;
+             use until one is in hand. Kc FAO-56 Table 12 (cereals ini 0.3, barley mid 1.15, end 0.25); stages Table 11 Barley/Oats/Wheat
+             "35-45 deg L, March/Apr" 20/25/60/30 (Idaho is in that band); root depth / p Table 22 barley 1.0-1.5 m -> 1.5, p 0.55. -->
+        <drought ky="0.37" kcIni="0.3" kcMid="1.15" kcEnd="0.25" lIni="20" lDev="25" lMid="60" lLate="30" rootM="1.5" p="0.55"/>
+    </crop>
+    <crop fruit="OAT">
+        <plant state="ND" month="5" day="24"/>   <!-- NASS North Dakota oats, week ending May 24 (66 %) -->
+        <plantIn country="CA" state="QC" month="5" day="11"/>   <!-- v0.29.8 (team: Quebec from variety trials): RGCQ / CEROM Quebec variety-trial sowing dates, mean of trial sites, years 2021, 2022, 2023, 2025 (2024 report not found): oats May 4, 13, 14, 14 -->
+        <plantIn country="CA" state="ON" region="southwest" month="4" day="10"/>   <!-- v0.29.8: OMAFRA Agronomy Guide (Pub. 811) ch. 4, target date for spring cereals, southwestern Ontario -->
+        <plantIn country="CA" state="ON" region="central" month="4" day="15"/>   <!-- v0.29.8: OMAFRA Agronomy Guide ch. 4, central and eastern Ontario -->
+        <plantIn country="CA" state="ON" region="north" month="5" day="10"/>   <!-- v0.29.8: OMAFRA Agronomy Guide ch. 4, northern Ontario -->
+        <plantIn country="PL" month="3" day="28"/>   <!-- v0.29.6: COBORU post-registration variety trials (PDO), mean sowing date of all trial sites, oats 2021-2025: Apr 1, Mar 23, Apr 1, Mar 28, Mar 23 -->
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <plantIn country="DE" month="3" day="28"/>   <!-- v0.29.3: DWD phenology annual reporters, sowing (Bestellung) median of all reports, mean of the last 5 full years (2019-2023), Hafer -->
+        <!-- MSU MontGuide MT200103AG (Miller, Lanier, Brandt; oat data Brandt, Scott SK 1993-97), GDD base 32 F = (max+min)/2 - 32 from seeding.
+             Published ranges, HIGH end used (team; guide: wet environments toward the high end): anthesis 1400-1736 -> 1736,
+             seed fill (watery ripe) 1866-2244 -> 2244, soft dough 2516-2957 -> 2957. Milk not published = milk rules off. -->
+        <growth method="mean" baseF="32"/>
+        <stage name="flowering" dd="1736"/> <stage name="seedfill" dd="2244"/> <stage name="milk" dd=""/> <stage name="dough" dd="2957"/>
+        <freezeStage stage="flowering" untilStage="seedfill" lowAtOrBelowF="24.8" loss="50"/>
+        <freezeStage stage="flowering" untilStage="seedfill" lowAtOrBelowF="21.2" lossLow="73" lossHigh="77"/>
+        <freezeStage stage="milk"      untilStage="dough" lowAtOrBelowF="17.6" loss="33"/>
+        <freezeStage stage="milk"      untilStage="dough" lowAtOrBelowF="14"   loss="50"/>
+        <!-- v0.11.8: the stage numbers above are from SPRING-sown crops. A crop planted Aug-Feb (fall / winter sowing) has no sourced
+             stage clock yet, so its freeze rules stay OFF (Rule #1). Months: 1 = Jan ... 12 = Dec. -->
+        <freezeOff plantedMonths="8 9 10 11 12 1 2"/>
+    <hail state="ND" lossPct="62.5676" chance="0.000008 0.000000 0.000000 0.000010 0.000059 0.002957 0.007298 0.002854 0.000486 0.000056 0.000006 0.000000"/>
+    <wind state="ND" lossPct="59.3620" chance="0.000000 0.000000 0.000000 0.000000 0.000029 0.000123 0.000290 0.000259 0.000368 0.000057 0.000000 0.000000"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", ND, 2001-2025, same method as hail -->
+        <!-- v0.19 DROUGHT (team): no published Ky for oats, so ky="0" (no seasonal Ky loss). Stress rule from South Dakota State
+             (Sandhu 1973 PhD, field oats, 10-11 days of water stress): anthesis through early grain formation = 58 % kernel yield loss
+             (boot stage 20 %, both 67 % - boot has no sourced oat timing, so those stay off). "Water stress" = soil water below the
+             readily available amount (FAO-56 Ks below 1). Water balance from FAO-56: Kc Table 12 (cereals ini 0.3, oats mid 1.15, end 0.25),
+             Table 11 Barley/Oats/Wheat "35-45 deg L, March/Apr" 20/25/60/30, Table 22 oats 1.0-1.5 m -> 1.5, p 0.55. -->
+        <drought ky="0" kcIni="0.3" kcMid="1.15" kcEnd="0.25" lIni="20" lDev="25" lMid="60" lLate="30" rootM="1.5" p="0.55"/>
+        <droughtStress fromStage="flowering" untilStage="seedfill" days="10" loss="58" source="SDSU Sandhu 1973, anthesis to early grain, 10-11 days"/>
+    </crop>
+
+    <!-- WHEAT -->
+    <crop fruit="WHEAT">
+        <plant state="ND" month="5" day="17"/>   <!-- NASS North Dakota spring wheat (excl durum), week ending May 17 (55 %) -->
+        <plantIn country="CA" state="QC" month="5" day="8"/>   <!-- v0.29.8 (team: Quebec from variety trials): RGCQ / CEROM Quebec variety-trial sowing dates, mean of trial sites, years 2021, 2022, 2023, 2025 (2024 report not found): spring wheat May 2, 11, 9, 9 -->
+        <plantIn country="CA" state="ON" region="southwest" month="4" day="10"/>   <!-- v0.29.8: OMAFRA Agronomy Guide (Pub. 811) ch. 4, target date for spring cereals, southwestern Ontario -->
+        <plantIn country="CA" state="ON" region="central" month="4" day="15"/>   <!-- v0.29.8: OMAFRA Agronomy Guide ch. 4, central and eastern Ontario -->
+        <plantIn country="CA" state="ON" region="north" month="5" day="10"/>   <!-- v0.29.8: OMAFRA Agronomy Guide ch. 4, northern Ontario -->
+        <plantIn country="PL" month="3" day="27"/>   <!-- v0.29.6: COBORU post-registration variety trials (PDO), mean sowing date of all trial sites, spring wheat 2021-2025: Mar 31, 25, 31, 28, 21 -->
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <!-- Planting clock: NDAWN wheat (Bauer et al. 1984, NDSU EB-37) via Montana Climate Office: base 32; max/min below 32 set to 32;
+             max capped 70 F until Haun 2.0 (395 GDD after planting), then 95 F. Emergence (Haun 0.5) = 180 GDD after planting.
+             From emergence, same EB-37 method (U of Idaho BUL 833, Ashley et al., Table 1 from Bauer et al. 1984 EB-37, standard 8-leaf HRS):
+             heading begins 1390, fully headed 1500, anthesis complete 1590, early milk 1835, early dough 2000.
+             Jointing (first node) 715 and boot 1359: NDSU W-564 (Gregoire, Endres, Zollinger), citing EB-37. Chained at emergence (team). -->
+        <growth method="ndawn" baseF="32" capF="95" earlyCapF="70" switchDD="395"/>
+        <stage name="emergence" dd="180"/>
+        <clock after="emergence" method="ndawn" baseF="32" capF="95" earlyCapF="70" switchDD="395"/>
+        <stage name="jointing"  from="emergence" dd="715"/>
+        <stage name="boot"      from="emergence" dd="1359"/>
+        <stage name="heading"   from="emergence" dd="1390"/>
+        <stage name="flowering" from="emergence" dd="1500"/>   <!-- fully headed; anthesis begins has no number - flowering window starts here (team) -->
+        <stage name="flowerEnd" from="emergence" dd="1590"/>   <!-- anthesis complete -->
+        <stage name="milk"      from="emergence" dd="1835"/>
+        <stage name="dough"     from="emergence" dd="2000"/>
+        <!-- Freeze: two hours or more at the temperature (K-State C-646 Table 1; UKY AGR-253 Tables 1-2).
+             Losses: UKY AGR-253 Table 2 (Knott 2020, CFTM cft2.20080) by visual damage - stem elongation SEVERE 0-20, boot MINOR 0-20
+             (moderate/severe n/a), heading SEVERE 30-50, flowering SEVERE 60-85. High end used (team). Milk/dough: no % published = off. -->
+        <freezeStage stage="jointing"  untilStage="boot"      lowAtOrBelowF="24" minHours="2" lossLow="0"  lossHigh="20"/>
+        <freezeStage stage="boot"      untilStage="heading"   lowAtOrBelowF="28" minHours="2" lossLow="0"  lossHigh="20"/>
+        <freezeStage stage="heading"   untilStage="flowering" lowAtOrBelowF="30" minHours="2" lossLow="30" lossHigh="50"/>
+        <freezeStage stage="flowering" untilStage="flowerEnd" lowAtOrBelowF="30" minHours="2" lossLow="60" lossHigh="85"/>
+        <!-- v0.11.8: the stage numbers above are from SPRING-sown crops. A crop planted Aug-Feb (fall / winter sowing) has no sourced
+             stage clock yet, so its freeze rules stay OFF (Rule #1). Months: 1 = Jan ... 12 = Dec. -->
+        <freezeOff plantedMonths="8 9 10 11 12 1 2"/>
+    <hail state="KS" lossPct="55.8090" chance="0.000043 0.000108 0.000240 0.001663 0.010288 0.012531 0.001371 0.000088 0.000011 0.000007 0.000033 0.000045"/>
+    <wind state="KS" lossPct="66.8128" chance="0.000432 0.000796 0.001165 0.000784 0.000229 0.000218 0.000053 0.000012 0.000009 0.000047 0.000143 0.000706"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", KS, 2001-2025, same method as hail -->
+        <drought ky="1.15" kcIni="0.3" kcMid="1.15" kcEnd="0.4" lIni="20" lDev="25" lMid="60" lLate="30" rootM="1.5" p="0.55"/>   <!-- spring wheat; Table 11 Barley/Oats/Wheat 35-45 deg latitude (March/Apr) 20/25/60/30; Ky Table 24 spring wheat 1.15 -->
+        <!-- v0.19 WATERLOGGING: U of Minnesota Extension (Wiersma, reviewed 2024), "Wheat flooding and waterlogging": wheat handles 3-4 days;
+             yield losses of 20 % to 50 % when soils were waterlogged more than 10 days -> high end 50 %. Not the lead state (K-State gives days only,
+             3-6 days) - team: use until a Kansas number is in hand. -->
+        <waterlog fromStage="" untilStage="" days="10" loss="50" source="U of Minnesota, waterlogged over 10 days (20-50 %, high end)"/>
+        <!-- v0.20 HEAT: K-State (lead state), Lin et al. 2022, Nature Communications 13:7438, "U.S. winter wheat yield loss attributed to compound
+             hot-dry-windy events": 4 % yield reduction per 10 hours of hot-dry-windy weather during heading to maturity. One HDW hour = temperature
+             >= 32 C, relative humidity <= 30 %, wind >= 7 m/s (10 m). Hours come from CFA's own day (NOAA GSOD day-to-day dew point and wind). -->
+        <hdw fromStage="heading" untilStage="" lossPer10h="4" tempC="32" rhPct="30" windMs="7" source="K-State, Lin 2022 Nat Commun, 4 pct per 10 h HDW heading-maturity"/>
+    </crop>
+
+    <!-- WHEAT, FALL-SOWN (winter wheat), planted Aug-Feb. Lead state: Kansas.
+         Stage timing in real days after planting: USDA NASS Crop Progress, Kansas winter wheat, 5-year average (as published),
+         first week at or above 50 %: planted week ending Oct 11 (56 %, 2027 crop-year series); jointing Apr 19 (51 %); headed May 17 (72 %);
+         coloring Jun 7 (64 %); mature Jun 21 (69 %). Days: jointing 190, headed 218, coloring 239, mature 253.
+         Freeze loss: Lindsey, Alt & Lindsey 2021, Crop Forage Turfgrass Mgmt 7:e20078, Table 1, temperature (F, 15-minute exposure)
+         at which grain yield (relative seed weight) was reduced 5 / 10 / 25 / 50 %:
+         Feekes 6 (jointing): 20.1 / 17.9 / 14.8 / 11.9 - used from jointing until headed.
+         Feekes 10.5.1 (flowering): 28.7 / 27.8 / 26.3 / 24.1 - used from headed until coloring.
+         Feekes 8 (flag leaf) row 30.7 / 27.6 / 24.6 / 21.9 is NOT used: NASS publishes no flag-leaf date (no sourced timing). -->
+    <crop fruit="WHEAT" plantedMonths="8 9 10 11 12 1 2">
+        <plant state="KS" month="10" day="11"/>   <!-- NASS Kansas winter wheat, week ending Oct 11 (56 %), same date the stage days count from -->
+        <plantIn country="IE" month="10" day="15"/>   <!-- v0.29.7 (team: Teagasc advice, middle of window): Teagasc via Agriland "mid-October is the optimal time to sow winter wheat crops under Irish conditions" -->
+        <plantIn country="GB" state="GBENG" month="10" day="10"/>   <!-- v0.29.6: AHDB Arable Crop Condition Report (November), GB, share drilled per month, 50 % point assuming even drilling within the month, mean of 2021, 2022, 2024, 2025 (2023 report gave no split): winter wheat Sep/Oct 27/62, 37/55, 27/46, 41/50 -> Oct 12, 8, 16, 6 -->
+        <plantIn country="GB" state="GBSCT" month="10" day="10"/>   <!-- v0.29.6: AHDB Arable Crop Condition Report (November), GB, share drilled per month, 50 % point assuming even drilling within the month, mean of 2021, 2022, 2024, 2025 (2023 report gave no split): winter wheat Sep/Oct 27/62, 37/55, 27/46, 41/50 -> Oct 12, 8, 16, 6 -->
+        <plantIn country="GB" state="GBWLS" month="10" day="10"/>   <!-- v0.29.6: AHDB Arable Crop Condition Report (November), GB, share drilled per month, 50 % point assuming even drilling within the month, mean of 2021, 2022, 2024, 2025 (2023 report gave no split): winter wheat Sep/Oct 27/62, 37/55, 27/46, 41/50 -> Oct 12, 8, 16, 6 -->
+        <plantIn country="PL" month="10" day="5"/>   <!-- v0.29.6: COBORU post-registration variety trials (PDO), mean sowing date of all trial sites, winter wheat, harvest years 2021-2025: Oct 6, 2, 8, 4, 7 -->
+        <plantIn country="DE" month="10" day="9"/>   <!-- v0.29.3: DWD phenology annual reporters, sowing (Bestellung) median of all reports, mean of the last 5 full years (2019-2023), Winterweizen -->
+        <plantIn country="FR" month="10" day="26"/>   <!-- v0.29.3: FranceAgriMer Cere'Obs, national 5-yr avg 2021-2025, first week ending at or above 50 % sown (same rule as NASS): soft wheat, wk ending Oct 26 (59 %) -->
+        <stage name="jointing" days="190"/> <stage name="headed" days="218"/> <stage name="coloring" days="239"/> <stage name="mature" days="253"/>
+        <freezeCurve stage="jointing" untilStage="headed">
+            <row lowAtOrBelowF="20.1" loss="5"/> <row lowAtOrBelowF="17.9" loss="10"/> <row lowAtOrBelowF="14.8" loss="25"/> <row lowAtOrBelowF="11.9" loss="50"/>
+        </freezeCurve>
+        <freezeCurve stage="headed" untilStage="coloring">
+            <row lowAtOrBelowF="28.7" loss="5"/> <row lowAtOrBelowF="27.8" loss="10"/> <row lowAtOrBelowF="26.3" loss="25"/> <row lowAtOrBelowF="24.1" loss="50"/>
+        </freezeCurve>
+    <hail state="KS" lossPct="55.8090" chance="0.000043 0.000108 0.000240 0.001663 0.010288 0.012531 0.001371 0.000088 0.000011 0.000007 0.000033 0.000045"/>
+    <wind state="KS" lossPct="66.8128" chance="0.000432 0.000796 0.001165 0.000784 0.000229 0.000218 0.000053 0.000012 0.000009 0.000047 0.000143 0.000706"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", KS, 2001-2025, same method as hail -->
+        <drought ky="1.05" kcIni="0.7" kcMid="1.15" kcEnd="0.4" lIni="160" lDev="75" lMid="75" lLate="25" rootM="1.8" p="0.55"/>   <!-- winter wheat, non-frozen soils; end 0.25-0.4 -> 0.4; Table 11 Idaho USA (October) 160/75/75/25; Ky Table 24 winter wheat 1.05 (FAO-40 total 1.0 -> high end 1.05) -->
+        <!-- v0.19 WATERLOGGING: U of Minnesota Extension (Wiersma, reviewed 2024), "Wheat flooding and waterlogging": wheat handles 3-4 days;
+             yield losses of 20 % to 50 % when soils were waterlogged more than 10 days -> high end 50 %. Not the lead state (K-State gives days only,
+             3-6 days) - team: use until a Kansas number is in hand. -->
+        <!-- v0.21.8 FLOODING (team: Texas): Texas Water Development Board / Texas A&amp;M AgriLife Extension, AGFL Tool v1.0 (2024),
+             sheet CropGrowthStageDamageCurves (WHEAT, WINTER) + DurationDamageFunc: loss % = base for the month of growth (planting month = 1)
+             + 1.996 x days flooded (the tool takes 1-30 days), at most 100; month of growth 5 and later = 0 in the tool (no effect); the tool counts only months on or after
+             the planting month in the same calendar year. Built from five studies incl. Collaku and Harrison 2002 (LSU). Replaces Minnesota until Kansas.
+             The tool's flood-depth rule is not used (CFA tracks waterlogged soil days, not water depth). -->
+        <floodModel base="31 29 25 23" perDay="1.996" source="Texas AGFL Tool 2024, winter wheat"/>
+        <!-- v0.20 HEAT: K-State (lead state), Lin et al. 2022, Nature Communications 13:7438, "U.S. winter wheat yield loss attributed to compound
+             hot-dry-windy events": 4 % yield reduction per 10 hours of hot-dry-windy weather during heading to maturity. One HDW hour = temperature
+             >= 32 C, relative humidity <= 30 %, wind >= 7 m/s (10 m). Hours come from CFA's own day (NOAA GSOD day-to-day dew point and wind). -->
+        <hdw fromStage="headed" untilStage="" lossPer10h="4" tempC="32" rhPct="30" windMs="7" source="K-State, Lin 2022 Nat Commun, 4 pct per 10 h HDW heading-maturity"/>
+    </crop>
+
+    <!-- COTTON: DD60 = (Tmax+Tmin)/2 - 60 (NC State). Killing freeze before harvest-ready = early termination,
+         14 % per 100 DD60 short of cutout + 750-850 DD60 (Stringer et al. 1989 via Cotton Foundation Ref. Book 5, p. 53-54).
+         Killing freeze 28 F: NC State 2023 Cotton Information Ch. 12 (hard frost below ~28 F), matches China CMA QX/T 88-2008 Table 2 severe frost at boll stage from -2.0 C (team).
+         Rain on open, unharvested cotton: 2.15 % per inch (Larson et al. 1999, same book p. 189). -->
+    <crop fruit="COTTON">
+        <plant state="TX" month="5" day="31"/>   <!-- NASS Texas upland cotton, week ending May 31 (59 %) -->
+        <growth method="mean" baseF="60"/>
+        <stage name="square" dd="670"/>    <!-- v0.19: Raper et al. 2023 Table 3, mean DD60 planting to match-head square -->
+        <stage name="flower" dd="1116"/>   <!-- Raper et al. 2023 Table 3, mean DD60 planting to first flower -->
+        <stage name="cutout" dd="1618"/>   <!-- Raper et al. 2023, Agron. J. 115, all-region mean DD60 planting to cutout (team) -->
+        <stage name="cracked" dd="2209"/>  <!-- Raper et al. 2023 Table 3, mean DD60 planting to first cracked boll -->
+        <!-- v0.21.8 FLOODING (team: Texas is the lead state, replaces Zhang 2016 China): Texas Water Development Board / Texas A&amp;M AgriLife
+             Extension, AGFL Tool v1.0 (2024), sheet CropGrowthStageDamageCurves (COTTON, UPLAND) + DurationDamageFunc: loss % = base for the
+             month of growth (planting month = 1) + 2.2796 x days flooded (the tool takes 1-30 days), at most 100, never below 0; month 7 and later = 0 in the tool (no effect).
+             Built from five cotton flood studies incl. Zhang 2016. The tool's flood-depth rule is not used (CFA tracks waterlogged soil days). -->
+        <floodModel base="13.162 9.268 5.374 1.48 -2.414 -6.308" perDay="2.2796" source="Texas AGFL Tool 2024, upland cotton"/>
+        <earlyEnd after="cutout" method="mean" baseF="60" fullHu="850" lossPer100="14" killingFreezeF="28"/>
+        <weathering perInchRain="2.15"/>
+    <hail state="TX" lossPct="81.2971" chance="0.000202 0.000014 0.000005 0.000114 0.004683 0.030082 0.003727 0.002736 0.002296 0.001873 0.000253 0.000146"/>
+    <wind state="TX" lossPct="73.7853" chance="0.000311 0.000021 0.000053 0.000137 0.001481 0.019777 0.002320 0.001020 0.000500 0.000337 0.000165 0.000217"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", TX, 2001-2025, same method as hail -->
+        <drought ky="0.85" kcIni="0.35" kcMid="1.20" kcEnd="0.70" lIni="30" lDev="50" lMid="55" lLate="45" rootM="1.7" p="0.65"/>   <!-- fibre crops ini 0.35; mid 1.15-1.20, end 0.70-0.50 -> high ends; Table 11 Texas (April) 30/50/55/45; Ky Table 24; root/p Table 22 -->
+    </crop>
+
+    <!-- Growth clocks only (no sourced loss table yet). -->
+    <!-- SUNFLOWER: NDSU A1995 Sunflower Production Guide (Kandel, Endres, Buetow, Dec 2020), Table 1, GDD from planting, base 44 F.
+         Stage clock only - no sourced freeze % (A1995: frost before maturity lowers yield, oil, test weight, no %). -->
+    <crop fruit="SUNFLOWER">
+        <plant state="ND" month="6" day="7"/>   <!-- NASS North Dakota sunflower, week ending Jun 7 (63 %) -->
+        <plantIn country="DE" month="4" day="20"/>   <!-- v0.29.3: DWD phenology annual reporters, sowing (Bestellung) median of all reports, mean of the last 5 full years (2012, 2013, 2021-2023), Sonnenblume -->
+        <growth method="mean" baseF="44"/>
+        <stage name="VE" dd="206"/> <stage name="V4" dd="347"/> <stage name="V8" dd="487"/> <stage name="V12" dd="627"/>
+        <stage name="V16" dd="767"/> <stage name="V20" dd="908"/> <stage name="R1" dd="1048"/> <stage name="R2" dd="1188"/>
+        <stage name="R3" dd="1328"/> <stage name="R4" dd="1469"/> <stage name="R5.1" dd="1609"/> <stage name="R5.5" dd="1749"/>
+        <stage name="R6" dd="1889"/> <stage name="R7" dd="2030"/> <stage name="R8" dd="2170"/> <stage name="R9" dd="2310"/>
+    <hail state="ND" lossPct="52.2330" chance="0.000101 0.000007 0.000000 0.000025 0.000058 0.004494 0.008419 0.006560 0.001108 0.000415 0.000258 0.000089"/>
+    <wind state="ND" lossPct="45.5147" chance="0.000006 0.000000 0.000000 0.000000 0.000121 0.000651 0.001903 0.003250 0.001651 0.002864 0.000498 0.000024"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", ND, 2001-2025, same method as hail -->
+        <drought ky="0.95" kcIni="0.35" kcMid="1.15" kcEnd="0.35" lIni="25" lDev="35" lMid="45" lLate="25" rootM="1.5" p="0.45"/>   <!-- oil crops ini 0.35; mid 1.0-1.15 -> 1.15; Table 11 Medit.; California (April/May) 25/35/45/25; Ky Table 24; root/p Table 22 -->
+    </crop>
+    <crop fruit="SUGARBEET">
+        <plant state="MN" month="5" day="3"/>   <!-- NASS Minnesota sugarbeets, week ending May 3 (50 %) -->
+        <plantIn country="DE" month="4" day="4"/>   <!-- v0.29.3: DWD phenology annual reporters, sowing (Bestellung) median of all reports, mean of the last 5 full years (2019-2023), Zucker-Ruebe -->
+        <!-- v0.14: NDAWN / NDSU sugarbeet GDD (Holen 1998; Holen and Dexter 1997): base 34 F, max or min below 34 set to 34, max above 86 set to 86;
+             counted from the day after planting. Leaf stages, cumulative GDD: NDAWN Sugarbeet GDD help table. -->
+        <growth method="ndawn" baseF="34" capF="86"/>
+        <stage name="V1" dd="237"/> <stage name="V2" dd="572"/> <stage name="V3" dd="713"/> <stage name="V4" dd="821"/> <stage name="V5" dd="913"/>
+        <stage name="V6" dd="993"/> <stage name="V7" dd="1066"/> <stage name="V8" dd="1133"/> <stage name="V9" dd="1195"/> <stage name="V10" dd="1253"/>
+        <hail state="MN" lossPct="26.5680" chance="0.000000 0.000000 0.000000 0.000009 0.000240 0.000584 0.000485 0.000325 0.000047 0.000017 0.000000 0.000001"/>
+        <wind state="MN" lossPct="12.3939" chance="0.000000 0.000000 0.000000 0.000455 0.006147 0.001922 0.000155 0.000012 0.000002 0.000000 0.000002 0.000002"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", MN, 2001-2025, same method as hail -->
+        <drought ky="1.0" kcIni="0.35" kcMid="1.20" kcEnd="0.70" lIni="50" lDev="40" lMid="50" lLate="40" rootM="1.2" p="0.55"/>   <!-- Table 11 Idaho USA (April) 50/40/50/40; Ky Table 24; root/p Table 22 -->
+    </crop>
+    <crop fruit="SUGARCANE"><growth method="mean" baseF="50.5"/></crop>            <!-- J. Exp. Bot. 2019, 10.3 C -->
+    <crop fruit="PEA">
+        <plant state="ND" month="5" day="17"/>   <!-- NASS North Dakota dry edible peas, week ending May 17 (50 %) -->
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <growth method="mean" baseF="40"/>
+        <hail state="ND" lossPct="61.1644" chance="0.000046 0.000019 0.000000 0.000000 0.000092 0.012957 0.034335 0.019401 0.002346 0.000825 0.000027 0.000178"/>
+        <wind state="ND" lossPct="50.9620" chance="0.000009 0.000000 0.000000 0.000000 0.000159 0.000419 0.001226 0.001616 0.000483 0.000011 0.000000 0.000000"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", ND, 2001-2025, same method as hail -->
+        <drought ky="1.15" kcIni="0.4" kcMid="1.15" kcEnd="0.30" lIni="35" lDev="25" lMid="30" lLate="20" rootM="1.0" p="0.40"/>   <!-- peas dry/seed (lead ND = dry peas), legumes ini 0.4; Table 11 Idaho USA (April) 35/25/30/20; Ky Table 24; root/p Table 22 -->
+    </crop>
+    <crop fruit="SPINACH"><growth method="mean" baseF="40"/></crop>
+    <crop fruit="CARROT"><growth method="mean" baseF="40"/></crop>
+    <crop fruit="BEETROOT"><growth method="mean" baseF="40"/></crop>
+    <crop fruit="PARSNIP"><growth method="mean" baseF="40"/></crop>
+    <crop fruit="BLACKBEAN">   <!-- v0.25.15 (team 2026-11-10): Redstone County (OK) map black beans = dry edible bean, lead state North Dakota -->
+        <!-- Planting: NDSU A1133 Dry Bean Production Guide - "last 10 days in May to the first 10 days in June" -> high end Jun 10.
+             Clock: HPRCC (Univ. of Nebraska) AWDN "Crop Coefficients for: Dry beans": GDD lower limit 50 F, upper limit 86 F.
+             Stages, real days after planting: NDSU A1133 Table 5, indeterminate column (black bean cultivars in A1133 are all Type II,
+             upright indeterminate; Table 5 lists Type I and Type III only, so the indeterminate column is used).
+             Freeze (v0.25.17, team 2026-11-10): Ontario OMAFRA Pub. 811 (via Dry Bean Agronomy / Ontario Bean Growers): "Light frost (0 to -1 C)
+             may kill the top leaves but not penetrate the canopy" -> pods reached below 30 F; frosted green beans "will shrivel and retain their
+             green colouring, resulting in increased pick" (picked out = lost). NDSU (Berglund 2021): frost-sensitive at 30-32 F; pods "yellow
+             to brown color" escape damage. NDSU A1133 Table 5 / Sask Pulse: pods start changing colour at R8 -> window R2 (first pods) to R8.
+             Loss = 100 % (the green beans are picked out; no source prints a smaller share).
+             Hail / wind (v0.25.16): USDA RMA Cause of Loss (colsom) "Dry Beans", North Dakota, 2001-2025, same method as the other crops:
+             monthly chance = determined acres / NASS ND dry bean acres planted (INCL CHICKPEAS 2001-2018, EXCL CHICKPEAS 2019-2025);
+             loss on hit = (indemnity / determined acres) / (liability / net planted quantity). Hail 2.44 %/yr, 50.5 % on hit; wind 0.78 %/yr, 27.9 %.
+             Drought: FAO-56 Table 12 "Beans, dry and Pulses" Kc 0.4 / 1.15 / 0.35; Table 11 Beans (dry) US row "Idaho, USA" 25/25/30/20;
+             Table 22 root 0.6-0.9 m (high end 0.9), p 0.45; Table 24 "Beans" Ky 1.15. -->
+        <plant state="ND" month="6" day="10"/>
+        <growth method="capped" baseF="50" capF="86"/>
+        <stage name="R1" days="40"/> <stage name="R2" days="43"/> <stage name="R3" days="46"/> <stage name="R4" days="50"/>
+        <stage name="R5" days="56"/> <stage name="R6" days="60"/> <stage name="R7" days="70"/> <stage name="R8" days="82"/>
+        <stage name="R9" days="94"/>
+        <freezeStage stage="R2" untilStage="R8" lowAtOrBelowF="29.9" loss="100"/>
+        <hail state="ND" lossPct="50.5184" chance="0.000000 0.000000 0.000000 0.000000 0.000035 0.006287 0.008676 0.006553 0.002572 0.000207 0.000026 0.000007"/>
+        <wind state="ND" lossPct="27.8602" chance="0.000005 0.000000 0.000000 0.000000 0.000336 0.005456 0.001099 0.000461 0.000234 0.000218 0.000001 0.000000"/>
+        <drought ky="1.15" kcIni="0.4" kcMid="1.15" kcEnd="0.35" lIni="25" lDev="25" lMid="30" lLate="20" rootM="0.9" p="0.45"/>
+    </crop>
+    <crop fruit="GREENBEAN">   <!-- Oregon State -->
+        <growth method="capped" baseF="40" capF="90"/>
+        <drought ky="1.15" kcIni="0.5" kcMid="1.05" kcEnd="0.90" lIni="20" lDev="30" lMid="30" lLate="10" rootM="0.7" p="0.45"/>   <!-- beans green; Table 11 Calif., Mediterranean (Feb/Mar) 20/30/30/10; Ky Table 24; root/p Table 22 (v0.14: moved inside GREENBEAN - it sat outside the crop and did nothing) -->
+    </crop>
+    <crop fruit="POTATO">                 <!-- UF; frost blackens tops, tubers fine (NDSU) = no loss -->
+        <growth method="mean" baseF="45"/>
+        <hail state="ID" lossPct="25.3136" chance="0.000000 0.000000 0.000000 0.000000 0.000054 0.000645 0.001085 0.000581 0.000012 0.000349 0.000000 0.000000"/>
+        <wind state="ID" lossPct="26.5416" chance="0.000000 0.000000 0.000000 0.000000 0.000000 0.000048 0.000127 0.000067 0.000002 0.000000 0.000000 0.000000"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", ID, 2001-2025, same method as hail -->
+        <drought ky="1.1" kcIni="0.5" kcMid="1.15" kcEnd="0.75" lIni="45" lDev="30" lMid="70" lLate="20" rootM="0.6" p="0.35"/>   <!-- roots &amp; tubers ini 0.5; Table 11 Idaho USA (Apr/May) 45/30/70/20; Ky Table 24; root/p Table 22 -->
+    </crop>
+    <crop fruit="GRAPE"><growth method="mean" baseF="50"/></crop>                  <!-- NMSU -->
+    <!-- No weather damage (team): POPLAR, OILSEEDRADISH - not listed on purpose.
+         v0.23 GRASS (= timothy, team): listed so each grass growth gets a crop record; its only damage is winterkill (CFAWinter.lua). -->
+    <crop fruit="GRASS" winterOnly="true"/>
+    <!-- v0.21.8 ALFALFA (team OK): flooding only.
+         FLOOD LOSS: UC Davis / UC ANR (Long, April 5 2019, "Producing Alfalfa in a Wet Year", Sacramento Valley 2017 field study): actively growing
+         alfalfa with water standing 3-5 days = 20 % yield decline, 6-7 days = 40 % by August (2 days: stand recovered). Longest days of each range
+         used. Standing water is stronger than CFA's waterlogged-soil day (team agreed to use it until better numbers).
+         ACTIVELY GROWING: FAO-56 Table 11 footnote 4 (Everson, Faubion and Amos 1978, U of Idaho bulletin 494): alfalfa season = last -4 C in spring
+         until first -4 C in fall. In CFA: dormant from the first low at or below 24.8 F (-4 C) from July on, until the station's NOAA 1991-2020
+         daily normal low is above 24.8 F again in spring. Dormant days do not count.
+         WATER BALANCE (needed for the waterlogged-day count): FAO-56 Table 12 alfalfa hay, averaged cutting effects Kc 0.40 / 0.95 / 0.90;
+         Table 11 alfalfa 1st cutting cycle, Idaho USA 10/30/25/10; Table 22 alfalfa for hay root 1.0-2.0 m -> 2.0, p 0.55.
+         ky="0": no drought yield loss for alfalfa (not sourced / not agreed). -->
+    <crop fruit="ALFALFA" dormantBelowF="24.8">
+        <drought ky="0" kcIni="0.40" kcMid="0.95" kcEnd="0.90" lIni="10" lDev="30" lMid="25" lLate="10" rootM="2.0" p="0.55"/>
+        <waterlog fromStage="" untilStage="" days="5" loss="20" source="UC Davis Long 2019, actively growing, water 3-5 days"/>
+        <waterlog fromStage="" untilStage="" days="7" loss="40" source="UC Davis Long 2019, actively growing, water 6-7 days"/>
+    </crop>
+    <crop fruit="CANOLA">
+        <plant state="ND" month="5" day="31"/>   <!-- NASS North Dakota canola, week ending May 31 (72 %) -->
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <!-- v0.14: NDAWN canola GDD: base 41 F, max or min below 41 set to 41, no upper limit; counted from the day after planting.
+             Stages are published as GDD RANGES (NDAWN Canola GDD help table) - HIGH end of each range used (team, no midpoints). -->
+        <growth method="ndawn" baseF="41"/>
+        <stage name="seedling" dd="256"/> <stage name="rosette3leaf" dd="396"/> <stage name="rosette4leaf" dd="727"/> <stage name="earlyBud" dd="828"/>
+        <stage name="lateBud" dd="932"/> <stage name="earlyFlower" dd="1165"/> <stage name="lateFlower" dd="1397"/> <stage name="earlyRipening" dd="1634"/>
+        <stage name="lateRipening" dd="1874"/>
+        <!-- v0.25.12 FROST AFTER FLOWERING (team 2026-11-09): NDSU Extension, "Effect of Frost on Flowering Canola": "Three degrees of frost is
+             enough to kill immature seeds containing 50 to 60% moisture"; seed ready to swath (about 35 %) "will normally escape damage"; frost at
+             flowering = "only minor reductions" (no %, no effect). NDSU A686 Canola Production gives its temperatures in F, so 3 degrees of frost
+             = 29 F. Seed is over 40 % moisture until filling ends (NDSU A686: physiological maturity "at about 40% moisture"; K-State MF3236: full
+             seed weight about day 70 after flowering) -> window = late flower until early ripening. A killed seed = 100 % loss. -->
+        <freezeStage stage="lateFlower" untilStage="earlyRipening" lowAtOrBelowF="29" loss="100"/>
+        <hail state="ND" lossPct="50.8904" chance="0.000000 0.000011 0.000000 0.000008 0.000174 0.004173 0.008204 0.010350 0.003048 0.000266 0.000019 0.000000"/>
+        <wind state="ND" lossPct="34.0953" chance="0.000002 0.000000 0.000000 0.000006 0.001265 0.002618 0.000783 0.004676 0.003097 0.000841 0.000006 0.000000"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", ND, 2001-2025, same method as hail -->
+    </crop>
+    <crop fruit="RICE">
+        <plant state="AR" month="4" day="26"/>   <!-- NASS Arkansas rice, week ending Apr 26 (54 %) -->
+        <hail state="AR" lossPct="33.2339" chance="0.000000 0.000000 0.000000 0.000005 0.000003 0.000004 0.000002 0.000044 0.000103 0.000086 0.000014 0.000000"/>
+        <wind state="AR" lossPct="43.5821" chance="0.000012 0.000000 0.000000 0.000015 0.000039 0.000080 0.000031 0.000540 0.001238 0.000494 0.000090 0.000005"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", AR, 2001-2025, same method as hail -->
+        <!-- v0.19 RICE CLOCK: U of Arkansas (lead state) Rice DD50: (max + min)/2 - 50 F, max set to 94 F if above, min set to 70 F if above
+             (dd50.uada.edu About page, Equation 1), counted from emergence. Arkansas AES Research Series 529 (B.R. Wells Rice Research Studies 2004,
+             Stuttgart AR), 29 April seeding (closest to the NASS AR 4/26 planting date), means across cultivars: seeding to emergence 9 days (Table 1),
+             emergence to 0.5-in internode elongation 1318 DD50 (Table 2), emergence to 50 % heading 2698 DD50 (Table 3).
+             Booting (R2) = 0.5-in IE (panicle differentiation, R1) + 600 DD50 (Arkansas Rice Production Handbook MP192: R1 to R2 "about 600 DD50 units"). -->
+        <growth method="dd50ar" baseF="50" startDays="9"/>
+        <stage name="ie" dd="1318"/> <stage name="boot" dd="1918"/> <stage name="heading" dd="2698"/>
+        <!-- v0.19 COLD AT BOOTING (team): trigger = Arkansas MP192, "50 F or less for two consecutive nights 2 weeks prior to and/or at flowering can cause
+             excessive sterility"; loss = Zhang et al. 2026 meta-analysis (Frontiers in Plant Science 17:1775257), booting -18.28 % (not the lead state;
+             use until an Arkansas % is in hand). -->
+        <coldNights fromStage="boot" untilStage="heading" lowAtOrBelowF="50" nights="2" loss="18.28" source="Arkansas MP192 trigger, Zhang 2026 booting loss"/>
+    </crop>
+    <crop fruit="RICELONGGRAIN">   <!-- Farmville NC map's rice; same Arkansas (lead state) hail data as RICE -->
+        <plant state="AR" month="4" day="26"/>
+        <hail state="AR" lossPct="33.2339" chance="0.000000 0.000000 0.000000 0.000005 0.000003 0.000004 0.000002 0.000044 0.000103 0.000086 0.000014 0.000000"/>
+        <wind state="AR" lossPct="43.5821" chance="0.000012 0.000000 0.000000 0.000015 0.000039 0.000080 0.000031 0.000540 0.001238 0.000494 0.000090 0.000005"/>   <!-- v0.19: USDA RMA Cause of Loss "Wind/Excess Wind", AR, 2001-2025, same method as hail -->
+        <!-- v0.19 RICE CLOCK: U of Arkansas (lead state) Rice DD50: (max + min)/2 - 50 F, max set to 94 F if above, min set to 70 F if above
+             (dd50.uada.edu About page, Equation 1), counted from emergence. Arkansas AES Research Series 529 (B.R. Wells Rice Research Studies 2004,
+             Stuttgart AR), 29 April seeding (closest to the NASS AR 4/26 planting date), means across cultivars: seeding to emergence 9 days (Table 1),
+             emergence to 0.5-in internode elongation 1318 DD50 (Table 2), emergence to 50 % heading 2698 DD50 (Table 3).
+             Booting (R2) = 0.5-in IE (panicle differentiation, R1) + 600 DD50 (Arkansas Rice Production Handbook MP192: R1 to R2 "about 600 DD50 units"). -->
+        <growth method="dd50ar" baseF="50" startDays="9"/>
+        <stage name="ie" dd="1318"/> <stage name="boot" dd="1918"/> <stage name="heading" dd="2698"/>
+        <!-- v0.19 COLD AT BOOTING (team): trigger = Arkansas MP192, "50 F or less for two consecutive nights 2 weeks prior to and/or at flowering can cause
+             excessive sterility"; loss = Zhang et al. 2026 meta-analysis (Frontiers in Plant Science 17:1775257), booting -18.28 % (not the lead state;
+             use until an Arkansas % is in hand). -->
+        <coldNights fromStage="boot" untilStage="heading" lowAtOrBelowF="50" nights="2" loss="18.28" source="Arkansas MP192 trigger, Zhang 2026 booting loss"/>
+    </crop>
+    <crop fruit="PEANUT">   <!-- lead state Georgia: RMA PEANUTS hail rows / NASS GA peanuts acres planted, 2001-2025 -->
+        <plant state="GA" month="5" day="17"/>   <!-- NASS Georgia peanuts, week ending May 17 (50 %) -->
+        <hail state="GA" lossPct="26.7035" chance="0.000000 0.000000 0.000000 0.000000 0.000002 0.000028 0.000005 0.000003 0.000013 0.000027 0.000005 0.000017"/>
+        <wind state="GA" lossPct="40.59" chance="0.000000 0.000000 0.000000 0.000000 0.000006 0.000000 0.000000 0.000056 0.000069 0.000001 0.000000 0.000000"/>   <!-- v0.25.20: USDA RMA Cause of Loss "Wind/Excess Wind", GA peanuts, 2001-2025, 38 claim rows in 9 years; rows that give pounds, not acres (liability/quantity < $20) skipped -->
+        <drought ky="0.70" kcIni="0.4" kcMid="1.15" kcEnd="0.60" lIni="35" lDev="45" lMid="35" lLate="25" rootM="1.0" p="0.50"/>   <!-- groundnut; legumes ini 0.4; no US row in Table 11 - May/June Mediterranean row 35/45/35/25 (closest to Georgia May planting); Ky Table 24; root/p Table 22 -->
+    </crop>
+    <crop fruit="TOBACCO">  <!-- flue-cured, lead state North Carolina: RMA FLUE CURED TOBACCO hail rows / NASS NC tobacco acres HARVESTED
+                                 (NASS publishes no tobacco planted acres), 2001-2025 -->
+        <plant state="NC" month="5" day="10"/>   <!-- NASS NC flue-cured, transplanted week ending May 10 (67 %) -->
+        <!-- v0.14 stage timing, real days after transplanting: layby 42 (2026 NC State Flue-Cured Tobacco Guide AG-187, Managing Weeds:
+             "layby (six weeks after transplanting)"); topping 76 (same guide, Managing Nutrients Fig. 5-2: flowering counted 62-76 days after
+             transplanting, high end); 50 % harvested 112 and 95 % harvested 168 (NASS NC flue-cured 5-yr avg: Aug 30, Oct 25).
+             v0.14.1 DROUGHT (agreed by team, lead state North Carolina):
+             Kc ini/mid/end 0.35 / 1.10 / 0.90: FAO Irrigation Water Management Training Manual 3 (S2022E) ch. 3 crop factor table.
+             Ky 0.9 (total growing period): FAO Annex II Table 12 (X5647E, from FAO-33).
+             Stage lengths 42 / 34 / 36 / 56 days = transplant-layby, layby-topping, topping-50 % harvested, 50-95 % harvested (stages above).
+             Root depth 18 in = 0.46 m: NC State AG-452-01 (Evans 1996), Table 2, maximum rooting depth of irrigated crops in North Carolina soils.
+             p 0.50: same publication, "the allowable depletion volume generally recommended in North Carolina is 50 percent".
+             (NRCS National Agronomy Manual Table 504-3 gives 3-4 ft for deep unrestricted soil; not used - NC State is the lead-state source.) -->
+        <stage name="layby" days="42"/> <stage name="topping" days="76"/> <stage name="harvest50" days="112"/> <stage name="harvest95" days="168"/>
+        <drought ky="0.9" kcIni="0.35" kcMid="1.10" kcEnd="0.90" lIni="42" lDev="34" lMid="36" lLate="56" rootM="0.46" p="0.50"/>
+        <hail state="NC" lossPct="53.2617" chance="0.000043 0.000000 0.000000 0.000045 0.000840 0.002096 0.002861 0.001217 0.000452 0.000025 0.000000 0.000018"/>
+    </crop>
+    <!-- ================= v0.27.0 NEW CROPS (team 2026-11-12) =================
+         Team decisions (project doc cfa-new-crops-decisions-2026-11-12.md):
+         - Hail / wind / freeze / frost / cold winter: USDA RMA Cause of Loss (colsom) 2005-2025, crop's lead state; monthly chance =
+           determined acres / RMA Summary of Business insured acres (sobcov 2005-2025, same state) - NASS has no state acres for some of
+           these crops (same as tobacco). Loss on hit = (indemnity / determined acres) / (liability / net planted quantity).
+         - <coldLoss>: RMA "Freeze", "Frost", "Cold Winter" claims, used where Extension gives a damage temperature but no loss %
+           ("numbers do not lie"). In game the month's chance is spread over the station's freezing days (low at or below 32 F),
+           the same way hail is spread over thunder days (team option B).
+         - Planting: NASS state Crop Progress, 5-year average as published in the 2025 reports (2026 PDFs not reachable),
+           first week at or above 50 % planted. Drought OFF where FAO-33 has no Ky row (Rule #1). -->
+    <crop fruit="PINTOBEAN">   <!-- Gnadenthal. Team: pinto = black bean (NDSU A1133: pinto is Type III, the column BLACKBEAN uses). Copy of BLACKBEAN. -->
+        <plant state="ND" month="6" day="10"/>
+        <growth method="capped" baseF="50" capF="86"/>
+        <stage name="R1" days="40"/> <stage name="R2" days="43"/> <stage name="R3" days="46"/> <stage name="R4" days="50"/>
+        <stage name="R5" days="56"/> <stage name="R6" days="60"/> <stage name="R7" days="70"/> <stage name="R8" days="82"/>
+        <stage name="R9" days="94"/>
+        <freezeStage stage="R2" untilStage="R8" lowAtOrBelowF="29.9" loss="100"/>
+        <hail state="ND" lossPct="50.5184" chance="0.000000 0.000000 0.000000 0.000000 0.000035 0.006287 0.008676 0.006553 0.002572 0.000207 0.000026 0.000007"/>
+        <wind state="ND" lossPct="27.8602" chance="0.000005 0.000000 0.000000 0.000000 0.000336 0.005456 0.001099 0.000461 0.000234 0.000218 0.000001 0.000000"/>
+        <drought ky="1.15" kcIni="0.4" kcMid="1.15" kcEnd="0.35" lIni="25" lDev="25" lMid="30" lLate="20" rootM="0.9" p="0.45"/>
+    </crop>
+    <crop fruit="LENTILS">   <!-- Gnadenthal. Lead MT (Dry Pea policy 7 CFR 457.140 covers lentils). Planting: NASS MT lentils wk ending May 11 2025, 5-yr avg 51 %. Freeze temps (Sask. Ag 2025) give no loss % -> RMA Dry Peas MT freeze/frost. Drought off (no FAO-33 Ky). -->
+        <plant state="MT" month="5" day="11"/>
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <growth method="mean" baseF="32"/>   <!-- MSU MontGuide MT200103AG (Miller, Lanier, Brandt 2001), GDD base 32 F, high end of each range -->
+        <stage name="2leaf" dd="377"/>
+        <stage name="4leaf" dd="545"/>
+        <stage name="6leaf" dd="712"/>
+        <stage name="8leaf" dd="879"/>
+        <stage name="flowerBegin" dd="1567"/>
+        <stage name="flower50" dd="1886"/>
+        <stage name="seedFill" dd="2265"/>
+        <stage name="seedMaturing" dd="2901"/>
+        <stage name="swath" dd="3282"/>
+        <stage name="mature" dd="3408"/>
+        <hail state="MT" lossPct="65.47" chance="0.000000 0.000000 0.000000 0.000017 0.000125 0.012204 0.048678 0.012111 0.001481 0.000065 0.000000 0.000001"/>   <!-- RMA "Dry Peas" MT 2005-2025 / RMA insured acres, 1436 claim rows, 21 yrs -->
+        <wind state="MT" lossPct="50.33" chance="0.000000 0.000000 0.000000 0.000000 0.000395 0.000181 0.000902 0.000822 0.000146 0.000082 0.000000 0.000000"/>   <!-- RMA "Dry Peas" MT 2005-2025 / RMA insured acres, 157 claim rows, 20 yrs -->
+        <coldLoss cause="freeze" state="MT" lossPct="59.05" chance="0.000000 0.000000 0.000000 0.000027 0.000276 0.000024 0.000038 0.000000 0.000204 0.000013 0.000000 0.000000"/>   <!-- RMA "Dry Peas" MT, 42 rows, 17 yrs -->
+        <coldLoss cause="frost" state="MT" lossPct="50.58" chance="0.000000 0.000000 0.000000 0.000034 0.000238 0.000109 0.000011 0.000017 0.000081 0.000013 0.000000 0.000000"/>   <!-- RMA "Dry Peas" MT, 38 rows, 14 yrs -->
+        <coldLoss cause="coldWinter" state="MT" lossPct="41.00" chance="0.000000 0.000000 0.000000 0.000011 0.000000 0.000000 0.000000 0.000020 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Dry Peas" MT, 3 rows, 3 yrs -->
+    </crop>
+    <crop fruit="CHICKPEAS">   <!-- Gnadenthal. Lead MT (Dry Pea policy covers chickpeas). Planting: NASS MT "dry edible beans incl. chickpeas" wk ending May 18 2025, 5-yr avg 54 %. Desi stages. Drought off. -->
+        <plant state="MT" month="5" day="18"/>
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <growth method="mean" baseF="32"/>   <!-- MSU MontGuide MT200103AG (Miller, Lanier, Brandt 2001), GDD base 32 F, high end of each range -->
+        <stage name="2leaf" dd="469"/>
+        <stage name="4leaf" dd="638"/>
+        <stage name="6leaf" dd="807"/>
+        <stage name="8leaf" dd="977"/>
+        <stage name="flowerBegin" dd="1335"/>
+        <stage name="flower50" dd="1670"/>
+        <stage name="seedFill" dd="2071"/>
+        <stage name="seedMaturing" dd="2741"/>
+        <stage name="mature" dd="3277"/>
+        <hail state="MT" lossPct="65.47" chance="0.000000 0.000000 0.000000 0.000017 0.000125 0.012204 0.048678 0.012111 0.001481 0.000065 0.000000 0.000001"/>   <!-- RMA "Dry Peas" MT 2005-2025 / RMA insured acres, 1436 claim rows, 21 yrs -->
+        <wind state="MT" lossPct="50.33" chance="0.000000 0.000000 0.000000 0.000000 0.000395 0.000181 0.000902 0.000822 0.000146 0.000082 0.000000 0.000000"/>   <!-- RMA "Dry Peas" MT 2005-2025 / RMA insured acres, 157 claim rows, 20 yrs -->
+        <coldLoss cause="freeze" state="MT" lossPct="59.05" chance="0.000000 0.000000 0.000000 0.000027 0.000276 0.000024 0.000038 0.000000 0.000204 0.000013 0.000000 0.000000"/>   <!-- RMA "Dry Peas" MT, 42 rows, 17 yrs -->
+        <coldLoss cause="frost" state="MT" lossPct="50.58" chance="0.000000 0.000000 0.000000 0.000034 0.000238 0.000109 0.000011 0.000017 0.000081 0.000013 0.000000 0.000000"/>   <!-- RMA "Dry Peas" MT, 38 rows, 14 yrs -->
+        <coldLoss cause="coldWinter" state="MT" lossPct="41.00" chance="0.000000 0.000000 0.000000 0.000011 0.000000 0.000000 0.000000 0.000020 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Dry Peas" MT, 3 rows, 3 yrs -->
+    </crop>
+    <crop fruit="FLAX">   <!-- Gnadenthal. Lead ND. Planting: NASS ND flaxseed 5-yr avg 45 % May 25 2025 -> wk ending Jun 1. Drought off (no FAO-33 Ky). -->
+        <plant state="ND" month="6" day="1"/>
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <growth method="mean" baseF="32"/>   <!-- MSU MT200103AG flax, base 32 F, high end -->
+        <stage name="cotyledon" dd="309"/>
+        <stage name="2leaf" dd="406"/>
+        <stage name="4leaf" dd="503"/>
+        <stage name="6leaf" dd="599"/>
+        <stage name="flowerBegin" dd="1302"/>
+        <stage name="flower50" dd="1643"/>
+        <stage name="seedFill" dd="2049"/>
+        <stage name="seedMaturing" dd="2730"/>
+        <stage name="swath" dd="3273"/>
+        <hail state="ND" lossPct="48.80" chance="0.000000 0.000000 0.000000 0.000008 0.000111 0.002552 0.008573 0.006970 0.001921 0.000183 0.000006 0.000000"/>   <!-- RMA "Flax" ND 2005-2025 / RMA insured acres, 553 claim rows, 21 yrs -->
+        <wind state="ND" lossPct="41.91" chance="0.000000 0.000000 0.000000 0.000000 0.000458 0.000326 0.000726 0.001536 0.001535 0.001444 0.000034 0.000000"/>   <!-- RMA "Flax" ND 2005-2025 / RMA insured acres, 211 claim rows, 19 yrs -->
+        <coldLoss cause="freeze" state="ND" lossPct="29.98" chance="0.000000 0.000000 0.000000 0.000000 0.000537 0.000075 0.000000 0.000000 0.000267 0.000126 0.000000 0.000000"/>   <!-- RMA "Flax" ND, 31 rows, 12 yrs -->
+        <coldLoss cause="frost" state="ND" lossPct="43.00" chance="0.000000 0.000000 0.000000 0.000072 0.000597 0.000084 0.000027 0.000007 0.000660 0.000019 0.000000 0.000000"/>   <!-- RMA "Flax" ND, 59 rows, 12 yrs -->
+        <coldLoss cause="coldWinter" state="ND" lossPct="50.97" chance="0.000000 0.000000 0.000009 0.000000 0.000010 0.000011 0.000000 0.000000 0.000000 0.000089 0.000000 0.000000"/>   <!-- RMA "Flax" ND, 10 rows, 5 yrs -->
+    </crop>
+    <crop fruit="MUSTARD">   <!-- Gnadenthal. Yellow mustard (S. alba): MSU AMPC Briefing 59 (2005) "about 90 percent of total U.S. mustard acreage". Lead MT. Planting NASS MT mustard seed 5-yr avg 61 % wk ending May 18 2025. Drought off. -->
+        <plant state="MT" month="5" day="18"/>
+        <plantIn country="CA" state="AB" month="5" day="19"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Alberta Crop Report, all crops, 5-yr avg 61 % week ended May 19 2026 (31 % May 12) -->
+        <plantIn country="CA" state="SK" month="5" day="18"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Saskatchewan Crop Report No. 3 2026, all crops, 5-yr avg (2021-2025) 55 % week ending May 18 (28 % May 11) -->
+        <plantIn country="CA" state="MB" month="5" day="26"/>   <!-- v0.29.5 (team 2026-11-15, one date per province): Manitoba Crop Report 2026-05-26 Figure 1, all crops, 5-yr avg 68 % May 26 (43 % May 19) -->
+        <growth method="mean" baseF="32"/>   <!-- MSU MT200103AG Sinapis alba column, high end -->
+        <stage name="flowerBegin" dd="984"/>
+        <stage name="flower50" dd="1324"/>
+        <stage name="seedFill" dd="1733"/>
+        <stage name="seedMaturing" dd="2411"/>
+        <stage name="mature" dd="2957"/>
+        <hail state="MT" lossPct="61.92" chance="0.000000 0.000000 0.000000 0.000000 0.000000 0.011467 0.055860 0.012460 0.001965 0.000000 0.000000 0.000000"/>   <!-- RMA "Mustard" MT 2005-2025 / RMA insured acres, 102 claim rows, 14 yrs -->
+        <wind state="MT" lossPct="38.17" chance="0.000000 0.000000 0.000000 0.000000 0.001482 0.000973 0.000664 0.000897 0.000000 0.000231 0.000000 0.000000"/>   <!-- RMA "Mustard" MT 2005-2025 / RMA insured acres, 16 claim rows, 7 yrs -->
+        <coldLoss cause="freeze" state="MT" lossPct="28.40" chance="0.000000 0.000000 0.000000 0.001404 0.000917 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Mustard" MT, 5 rows, 4 yrs -->
+        <coldLoss cause="frost" state="MT" lossPct="39.96" chance="0.000000 0.000000 0.000000 0.000000 0.000485 0.000351 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Mustard" MT, 4 rows, 3 yrs -->
+        <coldLoss cause="coldWinter" state="MT" lossPct="47.80" chance="0.000113 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Mustard" MT, 1 rows, 1 yrs -->
+    </crop>
+    <crop fruit="MILLET">   <!-- Gnadenthal. Proso millet, lead CO. UNL EC137 Producing and Marketing Proso Millet in the Great Plains (Lyon et al.): plant "late May or early June" -> Jun 10 (team); GDD base 50 / cap 86 (corn formula); heading ~925, flowering ~1125, maturity ~1585. Drought off. -->
+        <plant state="CO" month="6" day="10"/>
+        <growth method="capped" baseF="50" capF="86"/>
+        <stage name="heading" dd="925"/>
+        <stage name="flowering" dd="1125"/>
+        <stage name="mature" dd="1585"/>
+        <hail state="CO" lossPct="53.26" chance="0.000000 0.000000 0.000006 0.000000 0.000093 0.003528 0.018692 0.026206 0.005593 0.000134 0.000041 0.000000"/>   <!-- RMA "Millet" CO 2005-2025 / RMA insured acres, 620 claim rows, 21 yrs -->
+        <wind state="CO" lossPct="69.86" chance="0.000000 0.000000 0.000015 0.000087 0.000106 0.000147 0.000332 0.000487 0.000616 0.000482 0.000078 0.000000"/>   <!-- RMA "Millet" CO 2005-2025 / RMA insured acres, 81 claim rows, 19 yrs -->
+        <coldLoss cause="freeze" state="CO" lossPct="64.07" chance="0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000116 0.000077 0.000000 0.000000"/>   <!-- RMA "Millet" CO, 6 rows, 5 yrs -->
+    </crop>
+    <crop fruit="BUCKWHEAT">   <!-- Gnadenthal. Lead ND. NDSU A687 Buckwheat Production (Berglund 2003, rev. Kandel 2019): seed May 25 - Jun 10 -> Jun 10; matures in 10-12 weeks -> 84 days (team: days, no GDD table). Frost: "very sensitive", no % -> RMA ND freeze/frost. Drought off. -->
+        <plant state="ND" month="6" day="10"/>
+        <stage name="mature" days="84"/>
+        <hail state="ND" lossPct="52.07" chance="0.000000 0.000000 0.000000 0.000000 0.000000 0.018147 0.032733 0.009495 0.007921 0.000000 0.000000 0.000000"/>   <!-- RMA "Buckwheat" ND 2005-2025 / RMA insured acres, 60 claim rows, 15 yrs -->
+        <wind state="ND" lossPct="26.47" chance="0.000000 0.000000 0.000000 0.000000 0.000000 0.007004 0.000000 0.001500 0.000646 0.004237 0.000000 0.000000"/>   <!-- RMA "Buckwheat" ND 2005-2025 / RMA insured acres, 12 claim rows, 5 yrs -->
+        <coldLoss cause="freeze" state="ND" lossPct="39.67" chance="0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.008093 0.000000 0.000000 0.000000"/>   <!-- RMA "Buckwheat" ND, 3 rows, 1 yrs -->
+        <coldLoss cause="frost" state="ND" lossPct="35.93" chance="0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.009964 0.000000 0.000000 0.000000"/>   <!-- RMA "Buckwheat" ND, 7 rows, 4 yrs -->
+    </crop>
+    <crop fruit="RYE">   <!-- Gnadenthal. Winter rye, lead ND. NDSU A2010: seed last week of Aug - early Oct -> Oct 7 (team). No growth clock (team option A: no lead-state GDD source); all damage by month from RMA ND incl. Cold Winter. -->
+        <plant state="ND" month="10" day="7"/>
+        <plantIn country="PL" month="9" day="28"/>   <!-- v0.29.6: COBORU post-registration variety trials (PDO), mean sowing date of all trial sites, winter rye, harvest years 2021-2025: Sep 27, 26, 28, 28, 30 -->
+        <plantIn country="DE" month="10" day="1"/>   <!-- v0.29.3: DWD phenology annual reporters, sowing (Bestellung) median of all reports, mean of the last 5 full years (2019-2023), Winterroggen -->
+        <hail state="ND" lossPct="55.17" chance="0.000000 0.000000 0.000000 0.000000 0.004346 0.009631 0.009899 0.003531 0.000021 0.000000 0.000000 0.000156"/>   <!-- RMA "Rye" ND 2005-2025 / RMA insured acres, 90 claim rows, 20 yrs -->
+        <wind state="ND" lossPct="51.54" chance="0.000000 0.000000 0.000426 0.000030 0.000000 0.000068 0.000220 0.001266 0.000106 0.000183 0.000000 0.000000"/>   <!-- RMA "Rye" ND 2005-2025 / RMA insured acres, 16 claim rows, 8 yrs -->
+        <coldLoss cause="freeze" state="ND" lossPct="43.43" chance="0.002205 0.001135 0.000417 0.001799 0.002294 0.000000 0.000000 0.000000 0.000000 0.000211 0.000000 0.000207"/>   <!-- RMA "Rye" ND, 19 rows, 10 yrs -->
+        <coldLoss cause="frost" state="ND" lossPct="36.21" chance="0.000000 0.000000 0.000000 0.000000 0.000080 0.000127 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Rye" ND, 2 rows, 2 yrs -->
+        <coldLoss cause="coldWinter" state="ND" lossPct="46.93" chance="0.005156 0.004308 0.000514 0.001906 0.002132 0.000000 0.000000 0.000000 0.000000 0.000242 0.000000 0.000435"/>   <!-- RMA "Rye" ND, 55 rows, 14 yrs -->
+    </crop>
+    <crop fruit="TRITICALE">   <!-- Gnadenthal. Lead KS (RMA insured acres; 8 years of data). K-State MF-2227 Triticale in Kansas (Shroyer et al. 1996): plant Aug 20 - Oct 1 by zone -> Oct 1. No growth clock (team option A). -->
+        <plant state="KS" month="10" day="1"/>
+        <plantIn country="PL" month="10" day="1"/>   <!-- v0.29.6: COBORU post-registration variety trials (PDO), mean sowing date of all trial sites, winter triticale, harvest years 2021-2025: Sep 30, Oct 4, Oct 1, Sep 30, Oct 1 -->
+        <hail state="KS" lossPct="51.36" chance="0.000000 0.000000 0.000585 0.006579 0.002724 0.009573 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Triticale" KS 2005-2025 / RMA insured acres, 15 claim rows, 7 yrs -->
+        <wind state="KS" lossPct="39.57" chance="0.000000 0.002880 0.008761 0.002365 0.001880 0.002466 0.000000 0.000000 0.000000 0.002014 0.000000 0.002347"/>   <!-- RMA "Triticale" KS 2005-2025 / RMA insured acres, 17 claim rows, 3 yrs -->
+        <coldLoss cause="freeze" state="KS" lossPct="51.96" chance="0.005273 0.000358 0.000000 0.004656 0.001723 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Triticale" KS, 6 rows, 3 yrs -->
+        <coldLoss cause="coldWinter" state="KS" lossPct="39.15" chance="0.006015 0.000448 0.000000 0.000000 0.001191 0.000177 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Triticale" KS, 11 rows, 7 yrs -->
+    </crop>
+    <crop fruit="ONION">   <!-- Ray County MO. Dry bulb onion, lead CA (NASS Vegetables 2024 Summary: CA 40,800 acres planted; RMA insured acres CA 85.8 k).
+         FAO-56 Table 11 Onion (dry), "Arid Region; Calif." row: 20/35/110/45 days = 210, planted "Oct; Jan." -> January (team, later of the two; day 31 = high end of the month).
+         Table 12 Kc 0.7/1.05/0.75; Table 22 root 0.3-0.6 m -> 0.6, p 0.30; Table 24 Ky 1.1. UC ANR 7242 (Smith et al. 2011): planted Sept-May, no frost numbers. -->
+        <plant state="CA" month="1" day="31"/>
+        <stage name="development" days="20"/> <stage name="midSeason" days="55"/> <stage name="lateSeason" days="165"/> <stage name="harvest" days="210"/>
+        <drought ky="1.1" kcIni="0.7" kcMid="1.05" kcEnd="0.75" lIni="20" lDev="35" lMid="110" lLate="45" rootM="0.6" p="0.30"/>
+        <hail state="CA" lossPct="23.21" chance="0.000000 0.000000 0.000860 0.000308 0.004595 0.001474 0.001478 0.000000 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Onions" CA 2005-2025 / RMA insured acres, 24 claim rows, 14 yrs -->
+        <wind state="CA" lossPct="17.33" chance="0.000008 0.000121 0.000000 0.000178 0.001467 0.001684 0.000522 0.000000 0.000000 0.001050 0.000100 0.000000"/>   <!-- RMA "Onions" CA 2005-2025 / RMA insured acres, 23 claim rows, 11 yrs -->
+        <coldLoss cause="freeze" state="CA" lossPct="23.31" chance="0.000303 0.002164 0.000195 0.000000 0.000262 0.000419 0.000000 0.000000 0.000000 0.000000 0.000000 0.000430"/>   <!-- RMA "Onions" CA, 11 rows, 6 yrs -->
+        <coldLoss cause="frost" state="CA" lossPct="24.54" chance="0.000666 0.000121 0.000000 0.000000 0.000350 0.001257 0.000830 0.000000 0.000000 0.000000 0.000000 0.000000"/>   <!-- RMA "Onions" CA, 11 rows, 6 yrs -->
+    </crop>
+    <!-- CLOVER (Gnadenthal, Gage KY, Midwest Moraines): record only, for Forage Production insurance (RMA 23-033 names "perennial red clover"). Flood / winter-kill only if a clover source turns up (team). -->
+    <crop fruit="CLOVER" winterOnly="true"/>
+    <!-- SPELT, LAVENDER, POPPY, FLOWERINGCATCHCROP: no USDA policy and no sourced numbers - not listed on purpose (team, Rule #1). -->
+    <!-- v0.27.2 (team 2026-11-13) Sandy Hills Farms: the map's feed crops use the game's corn and soybean plants (map files feedCorn.xml / feedBean.xml:
+         corn and soybean models, harvest "corn_stalks" / "soybean_straw"). Same plant = same weather numbers. -->
+    <alias fruit="FEEDCORN" sameAs="MAIZE"/>
+    <alias fruit="SILAGEMAIZE" sameAs="MAIZE"/>
+    <alias fruit="FEEDBEAN" sameAs="SOYBEAN"/>
+    <!-- v1.0.4 (team yes 2026-11-23): Delta South and other U.S. map crops that are a type of corn, soybean or sorghum (names from each map's
+         own foliage XML) use the plain crop's numbers. Same plant = same weather numbers. -->
+    <alias fruit="NONGMOCORN" sameAs="MAIZE"/>
+    <alias fruit="ECOCORN" sameAs="MAIZE"/>
+    <alias fruit="BIOCORN" sameAs="MAIZE"/>
+    <alias fruit="FOODGRADECORN" sameAs="MAIZE"/>
+    <alias fruit="CATTLEFEEDCORN" sameAs="MAIZE"/>
+    <alias fruit="EARLYSOYBEAN" sameAs="SOYBEAN"/>
+    <alias fruit="ECOSOYBEAN" sameAs="SOYBEAN"/>
+    <alias fruit="NEWSOYBEAN" sameAs="SOYBEAN"/>
+    <alias fruit="ORGANICSOYBEAN" sameAs="SOYBEAN"/>
+    <alias fruit="BIOBEAN" sameAs="SOYBEAN"/>
+    <alias fruit="FOODGRADEBEAN" sameAs="SOYBEAN"/>
+    <alias fruit="CATTLEFEEDBEAN" sameAs="SOYBEAN"/>
+    <alias fruit="FEEDSORGHUM" sameAs="SORGHUM"/>
+    <alias fruit="CATTLEFEEDSORGHUM" sameAs="SORGHUM"/>
+</cropWeather>

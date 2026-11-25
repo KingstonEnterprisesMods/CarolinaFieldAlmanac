@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<!-- Carolina Field Almanac - menu page (Kingston Enterprises) -->
+<GUI name="cfaMenuFrame">
+    <GuiElement profile="fs25_menuContainer">
+        <GuiElement profile="fs25_menuHeaderPanel">
+            <Bitmap profile="fs25_menuHeaderIconBg">
+                <Bitmap profile="CFAHeaderIcon"/>
+            </Bitmap>
+            <Text profile="fs25_menuHeaderTitle" id="headerTitle" text="Field Almanac"/>
+        </GuiElement>
+        <BoxLayout profile="fs25_subCategorySelectorTabbedBox" id="subCategoryBox"/>
+        <ThreePartBitmap profile="fs25_lineSeparatorTopHighlighted" position="0px -57px"/>
+        <MultiTextOption profile="fs25_subCategorySelectorTabbed" id="subCategoryPaging" position="0px -10px" onClick="onClickTab"/>
+        <Button profile="fs25_subCategorySelectorTabbedTab" id="selectorPrefab">
+            <ThreePartBitmap profile="fs25_subCategorySelectorTabbedTabBg" name="background"/>
+        </Button>
+        <GuiElement profile="CFATabContainer" id="tabContainer1" visible="true">
+            <GuiElement profile="fs25_statisticsHeaderBox">
+                <Text profile="CFAHeaderText" position="0px 0px" size="220px 32px" text="Date"/>
+                <Text profile="CFAHeaderText" position="220px 0px" size="1300px 32px" text="Notice"/>
+                <ThreePartBitmap profile="fs25_lineSeparatorBottom" position="0px -2dp"/>
+            </GuiElement>
+            <SmoothList profile="CFAList" id="noticesTable">
+                <ListItem profile="CFAListItem">
+                    <Text profile="CFACellLeft" position="0px 0px" size="220px 40px" name="colDate"/>
+                    <Text profile="CFACellLeft" position="220px 0px" size="1300px 40px" name="colText"/>
+                </ListItem>
+            </SmoothList>
+            <ThreePartBitmap profile="CFASliderBox">
+                <Slider profile="fs25_listSlider" dataElementId="noticesTable"/>
+            </ThreePartBitmap>
+            <Text profile="CFAEmptyText" id="noticesEmpty" visible="false"/>
+        </GuiElement>
+        <GuiElement profile="CFATabContainer" id="tabContainer2" visible="false">
+            <GuiElement profile="fs25_statisticsHeaderBox">
+                <Text profile="CFAHeaderTextCenter" position="0px 0px" size="100px 32px" text="Field"/>
+                <Text profile="CFAHeaderTextCenter" position="100px 0px" size="90px 32px" text="Owner"/>
+                <Text profile="CFAHeaderText" position="190px 0px" size="170px 32px" text="Crop"/>
+                <Text profile="CFAHeaderText" position="360px 0px" size="250px 32px" text="Planted"/>
+                <Text profile="CFAHeaderTextCenter" position="610px 0px" size="130px 32px" text="Degree days"/>
+                <Text profile="CFAHeaderText" position="740px 0px" size="210px 32px" text="Stage"/>
+                <Text profile="CFAHeaderText" position="950px 0px" size="430px 32px" text="Losses so far"/>
+                <Text profile="CFAHeaderTextCenter" position="1380px 0px" size="140px 32px" text="Status"/>
+                <ThreePartBitmap profile="fs25_lineSeparatorBottom" position="0px -2dp"/>
+            </GuiElement>
+            <SmoothList profile="CFAList" id="fieldsTable">
+                <ListItem profile="CFAListItem">
+                    <Text profile="CFACellCenter" position="0px 0px" size="100px 40px" name="colField"/>
+                    <Text profile="CFACellCenter" position="100px 0px" size="90px 40px" name="colOwner"/>
+                    <Text profile="CFACellLeft" position="190px 0px" size="170px 40px" name="colCrop"/>
+                    <Text profile="CFACellLeft" position="360px 0px" size="250px 40px" name="colPlanted"/>
+                    <Text profile="CFACellCenter" position="610px 0px" size="130px 40px" name="colDD"/>
+                    <Text profile="CFACellLeft" position="740px 0px" size="210px 40px" name="colStage"/>
+                    <Text profile="CFACellLeft" position="950px 0px" size="430px 40px" name="colLoss"/>
+                    <Text profile="CFACellCenter" position="1380px 0px" size="140px 40px" name="colStatus"/>
+                </ListItem>
+            </SmoothList>
+            <ThreePartBitmap profile="CFASliderBox">
+                <Slider profile="fs25_listSlider" dataElementId="fieldsTable"/>
+            </ThreePartBitmap>
+            <Text profile="CFAEmptyText" id="fieldsEmpty" visible="false"/>
+        </GuiElement>
+        <GuiElement profile="CFATabContainer" id="tabContainer3" visible="false">
+            <GuiElement profile="fs25_statisticsHeaderBox">
+                <Text profile="CFAHeaderText" position="0px 0px" size="180px 32px" text="Farmland"/>
+                <Text profile="CFAHeaderTextCenter" position="180px 0px" size="180px 32px" text="Cut area"/>
+                <Text profile="CFAHeaderTextCenter" position="360px 0px" size="280px 32px" text="Hay ready"/>
+                <Text profile="CFAHeaderTextCenter" position="640px 0px" size="240px 32px" text="Driest / wettest"/>
+                <Text profile="CFAHeaderText" position="880px 0px" size="340px 32px" text="Status"/>
+                <Text profile="CFAHeaderText" position="1220px 0px" size="300px 32px" text="Rain"/>
+                <ThreePartBitmap profile="fs25_lineSeparatorBottom" position="0px -2dp"/>
+            </GuiElement>
+            <SmoothList profile="CFAList" id="hayTable">
+                <ListItem profile="CFAListItem">
+                    <Text profile="CFACellLeft" position="0px 0px" size="180px 40px" name="colFarmland"/>
+                    <Text profile="CFACellCenter" position="180px 0px" size="180px 40px" name="colArea"/>
+                    <Text profile="CFACellCenter" position="360px 0px" size="280px 40px" name="colReady"/>
+                    <Text profile="CFACellCenter" position="640px 0px" size="240px 40px" name="colRange"/>
+                    <Text profile="CFACellLeft" position="880px 0px" size="340px 40px" name="colState"/>
+                    <Text profile="CFACellLeft" position="1220px 0px" size="300px 40px" name="colRain"/>
+                </ListItem>
+            </SmoothList>
+            <ThreePartBitmap profile="CFASliderBox">
+                <Slider profile="fs25_listSlider" dataElementId="hayTable"/>
+            </ThreePartBitmap>
+            <Text profile="CFAEmptyText" id="hayEmpty" visible="false"/>
+            <Text profile="CFANoteText" id="hayNote" text="The Field Cure box shows the farmland you are on (a panel on the right when driving). Grass and sun icon = curing, green bale = ready to bale (20 % or less), blue drop = rained on. Overnight dew can lift hay back over 20 % - wait for it to dry off. Under 0.05 acre is not listed. Late fall (October-November in most of the U.S.): shorter days, weaker sun and heavy night dew slow drying a lot. Hay can take 1-2 weeks, or may not reach 20 %. Tedding spreads the grass thinner so it dries faster. Tedding drier grass loses more - alfalfa loses about 5 times as much (leaves shatter). Winter: a hard winter can thin alfalfa and grass stands, and the Fields tab shows each stand. Most growers replant alfalfa after the seeding year plus 2-3 years of cutting (University of Minnesota)."/>
+        </GuiElement>
+        <GuiElement profile="CFATabContainer" id="tabContainer4" visible="false">
+            <GuiElement profile="fs25_statisticsHeaderBox">
+                <Text profile="CFAHeaderText" position="0px 0px" size="200px 32px" text="Day"/>
+                <Text profile="CFAHeaderTextCenter" position="200px 0px" size="200px 32px" text="High / low"/>
+                <Text profile="CFAHeaderTextCenter" position="400px 0px" size="180px 32px" text="Rain"/>
+                <Text profile="CFAHeaderTextCenter" position="580px 0px" size="260px 32px" text="Rain time"/>
+                <Text profile="CFAHeaderTextCenter" position="840px 0px" size="260px 32px" text="Storm"/>
+                <Text profile="CFAHeaderText" position="1100px 0px" size="420px 32px" text="Sky"/>
+                <ThreePartBitmap profile="fs25_lineSeparatorBottom" position="0px -2dp"/>
+            </GuiElement>
+            <SmoothList profile="CFAList" id="weatherTable">
+                <ListItem profile="CFAListItem">
+                    <Text profile="CFACellLeft" position="0px 0px" size="200px 40px" name="colDay"/>
+                    <Text profile="CFACellCenter" position="200px 0px" size="200px 40px" name="colTemp"/>
+                    <Text profile="CFACellCenter" position="400px 0px" size="180px 40px" name="colRainAmt"/>
+                    <Text profile="CFACellCenter" position="580px 0px" size="260px 40px" name="colRainTime"/>
+                    <Text profile="CFACellCenter" position="840px 0px" size="260px 40px" name="colStorm"/>
+                    <Text profile="CFACellLeft" position="1100px 0px" size="420px 40px" name="colSky"/>
+                </ListItem>
+            </SmoothList>
+            <ThreePartBitmap profile="CFASliderBox">
+                <Slider profile="fs25_listSlider" dataElementId="weatherTable"/>
+            </ThreePartBitmap>
+            <Text profile="CFAEmptyText" id="weatherEmpty" visible="false"/>
+        </GuiElement>
+        <GuiElement profile="CFATabContainer" id="tabContainer5" visible="false">
+            <GuiElement profile="fs25_statisticsHeaderBox">
+                <Text profile="CFAHeaderText" position="0px 0px" size="230px 32px" text="Crop / field"/>
+                <Text profile="CFAHeaderText" position="230px 0px" size="250px 32px" text="Plan"/>
+                <Text profile="CFAHeaderTextCenter" position="480px 0px" size="110px 32px" text="Coverage"/>
+                <Text profile="CFAHeaderTextCenter" position="590px 0px" size="90px 32px" text="Acres"/>
+                <Text profile="CFAHeaderTextCenter" position="680px 0px" size="170px 32px" text="Premium"/>
+                <Text profile="CFAHeaderTextCenter" position="850px 0px" size="150px 32px" text="Liability"/>
+                <Text profile="CFAHeaderTextCenter" position="1000px 0px" size="110px 32px" text="Yield kept"/>
+                <Text profile="CFAHeaderText" position="1110px 0px" size="410px 32px" text="Status"/>
+                <ThreePartBitmap profile="fs25_lineSeparatorBottom" position="0px -2dp"/>
+            </GuiElement>
+            <SmoothList profile="CFAList" id="insuranceTable">
+                <ListItem profile="CFAListItem">
+                    <Text profile="CFACellLeft" position="0px 0px" size="230px 40px" name="colName"/>
+                    <Text profile="CFACellLeft" position="230px 0px" size="250px 40px" name="colPlan"/>
+                    <Text profile="CFACellCenter" position="480px 0px" size="110px 40px" name="colCov"/>
+                    <Text profile="CFACellCenter" position="590px 0px" size="90px 40px" name="colAcres"/>
+                    <Text profile="CFACellCenter" position="680px 0px" size="170px 40px" name="colPrem"/>
+                    <Text profile="CFACellCenter" position="850px 0px" size="150px 40px" name="colLiab"/>
+                    <Text profile="CFACellCenter" position="1000px 0px" size="110px 40px" name="colKept"/>
+                    <Text profile="CFACellLeft" position="1110px 0px" size="410px 40px" name="colIns"/>
+                </ListItem>
+            </SmoothList>
+            <ThreePartBitmap profile="CFASliderBox">
+                <Slider profile="fs25_listSlider" dataElementId="insuranceTable"/>
+            </ThreePartBitmap>
+            <Text profile="CFAEmptyText" id="insuranceEmpty" visible="false"/>
+            <Text profile="CFANoteText" id="insuranceNote" text=""/>
+        </GuiElement>
+        <GuiElement profile="CFATabContainer" id="tabContainer6" visible="false">
+            <GuiElement profile="fs25_statisticsHeaderBox">
+                <Text profile="CFAHeaderText" position="0px 0px" size="420px 32px" text="Setting"/>
+                <Text profile="CFAHeaderTextCenter" position="420px 0px" size="360px 32px" text="Value"/>
+                <Text profile="CFAHeaderText" position="780px 0px" size="740px 32px" text="What it does"/>
+                <ThreePartBitmap profile="fs25_lineSeparatorBottom" position="0px -2dp"/>
+            </GuiElement>
+            <SmoothList profile="CFAList" id="settingsTable" onDoubleClick="onSettingDoubleClick">
+                <ListItem profile="CFAListItem">
+                    <Text profile="CFACellLeft" position="0px 0px" size="420px 40px" name="colSetting"/>
+                    <Text profile="CFACellCenter" position="420px 0px" size="360px 40px" name="colValue"/>
+                    <Text profile="CFACellLeft" position="780px 0px" size="740px 40px" name="colNote"/>
+                </ListItem>
+            </SmoothList>
+            <ThreePartBitmap profile="CFASliderBox">
+                <Slider profile="fs25_listSlider" dataElementId="settingsTable"/>
+            </ThreePartBitmap>
+            <Text profile="CFAEmptyText" id="settingsEmpty" visible="false"/>
+        </GuiElement>
+        <GuiElement profile="CFATabContainer" id="tabContainer7" visible="false">
+            <GuiElement profile="fs25_statisticsHeaderBox">
+                <Text profile="CFAHeaderText" position="0px 0px" size="230px 32px" text="Topic"/>
+                <Text profile="CFAHeaderText" position="230px 0px" size="330px 32px" text="Crops"/>
+                <Text profile="CFAHeaderText" position="560px 0px" size="470px 32px" text="Numbers"/>
+                <Text profile="CFAHeaderText" position="1030px 0px" size="490px 32px" text="Source"/>
+                <ThreePartBitmap profile="fs25_lineSeparatorBottom" position="0px -2dp"/>
+            </GuiElement>
+            <SmoothList profile="CFAList" id="sourcesTable">
+                <ListItem profile="CFAListItemTall">
+                    <Text profile="CFACellSmall" position="0px 0px" size="230px 60px" name="colTopic"/>
+                    <Text profile="CFACellSmall" position="230px 0px" size="330px 60px" name="colCrops"/>
+                    <Text profile="CFACellSmall" position="560px 0px" size="470px 60px" name="colNums"/>
+                    <Text profile="CFACellSmall" position="1030px 0px" size="490px 60px" name="colSrc"/>
+                </ListItem>
+            </SmoothList>
+            <ThreePartBitmap profile="CFASliderBox">
+                <Slider profile="fs25_listSlider" dataElementId="sourcesTable"/>
+            </ThreePartBitmap>
+            <Text profile="CFAEmptyText" id="sourcesEmpty" visible="false"/>
+        </GuiElement>
+    </GuiElement>
+</GUI>

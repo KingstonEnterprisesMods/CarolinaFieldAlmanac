@@ -1,0 +1,32 @@
+Carolina Field Almanac - Farming Simulator 25 mod
+Copyright (c) 2026 Kingston Enterprises. All rights reserved.
+
+YOU MAY
+- Download the mod and use it in your own game, single player or multiplayer.
+- Show it in videos, streams and screenshots. Please credit "Kingston Enterprises".
+- Read the source on GitHub to learn from it or to report bugs. Bug reports and suggestions are welcome in the GitHub Issues.
+
+YOU MAY NOT
+- Re-upload, mirror or share the mod files on any other site, drive or server.
+  Link to the official GitHub or itch.io page instead.
+- Sell the mod, or put it behind any paywall, subscription or "early access".
+- Post the mod, or a changed copy of it, as your own work.
+- Copy its scripts or data tables into another mod without written permission from Kingston Enterprises.
+
+GitHub's Terms of Service let GitHub users view and fork public repositories on GitHub.
+That does not grant any other right under this license.
+
+THIRD-PARTY DATA
+The weather and crop numbers come from public sources, each named on the in-game Sources tab and in README.txt.
+Their own licenses still apply to that data:
+- Canada: contains information licensed under the Open Government Licence - Canada.
+- UK: Met Office MIDAS Open - contains public sector information licensed under the Open Government Licence v3.0.
+- Ireland: Met Eireann (CC BY 4.0).
+- France: Meteo-France (Licence Ouverte v2.0).
+
+NO WARRANTY
+This is a beta. The mod is provided "as is", without warranty of any kind.
+Back up your savegames before using it.
+
+Farming Simulator is a trademark of GIANTS Software GmbH.
+This mod is not made or endorsed by GIANTS Software.

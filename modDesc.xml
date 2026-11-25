@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<modDesc descVersion="116">
+    <author>Kingston Enterprises</author>
+    <version>1.0.6.0</version>
+    <title>
+        <en>Carolina Field Almanac</en>
+        <de>Carolina Field Almanac</de>
+        <fr>Carolina Field Almanac</fr>
+    </title>
+    <description>
+        <en><![CDATA[Mod for Farming Simulator.
+
+TEST BUILD - real weather and real crop research. Every number comes from a named source; no source = no effect.
+Single player and multiplayer (one player hosts in the game; multiplayer is beta).
+
+WEATHER from real climate records (1991-2020):
+- 426 NOAA stations in all 50 U.S. states, 84 Environment Canada stations (Alberta, Manitoba, Ontario, Quebec, Saskatchewan) and 815 stations from Europe's national weather services (Poland, Germany, UK, Ireland, France)
+- Pick your State / Province / Country, City and part of town in the game's Settings (General) - the weather follows that station
+- 81 maps that name a real place pick their nearest station for you (you confirm it)
+- Every day's rain or sun, high and low come from 30 years of records at that station
+- Rain starts and lasts like real rain there (hourly rain records): afternoon storms in summer, longer rain in winter
+- Thunder and snow happen as often as the records show for the month and the temperature
+- Humidity, wind and clouds through the day follow hourly climate normals
+- The game's own forecast, sky, rain and temperatures follow these days
+
+CROPS (test): every field keeps its own degree-day clock from planting, fed by the real weather.
+- Sourced yield damage at harvest: freeze, heat, hail, wind, tornado, hurricane, drought, waterlogging, flooding, rain on a ready crop and harvest delay (the Sources tab lists which crops get which damage)
+- Open cotton left in the field loses 2.15 % per inch of rain (Larson et al. 1999)
+- A rule stays off until its number is sourced
+- Console: cfaCrops
+
+FIELD ALMANAC PAGE (ESC menu): Notifications, Fields, Hay, Weather, Insurance, Settings, Sources
+- Insurance, the real way: buy a policy per crop (Yield Protection, Revenue Protection, RP-HPE or APH, 50-85 %) BEFORE you plant. Every field of that crop is covered at planting and the policy renews each season until cancelled. Claims at harvest. Numbers: USDA RMA Summary of Business 2021-2025, lead state. Poland, Germany and France use their own countries' insurance numbers; UK and Ireland have no crop insurance yet
+- Damage switches lock while an insured crop is in the field
+- Settings: switch each damage type on or off, notices and pop-up time, mower conditions hay, light mode
+- Sources: every number in the mod and where it came from
+
+HAY - FIELD CURE: make hay the way it is done in the Carolinas: cut it, leave it lie, and let the sun cure it in the field. No tedder or dryer needed.
+
+- Mown grass dries where it lies from sun, heat and dry air (USDA-ARS drying research)
+- Drying stops at night and hay takes back a little dew
+- Rain soaks it again; soaked hay turns back into wet grass
+- Rain and long wet spells cost hay (leaching and respiration losses from USDA-ARS research) - a swath is not wiped out at once
+- Tedding is optional: tedded grass dries faster for the rest of that day, a raked windrow dries slower
+- Grass becomes collectable hay at 20 % moisture. Hay follows the game calendar: on short months (1-3 days) cut one day and it can be baled the next if the weather is dry
+- Stand on a swath to see its moisture
+
+WORKS ON ITS OWN - no other mods needed.
+NOT COMPATIBLE with other weather or hay drying mods: Realistic Water & Soil Management, Moisture System, Improved Hay, Realistic Hay Drying, or Seasons-type mods that change the weather or calendar. With Realistic Water & Soil Management or Moisture System installed, CFA weather, crop weather damage, CFA insurance and Field Cure hay curing are all off. Use only one weather mod.
+
+Console: cfcInfo
+
+Changelog 1.0.6.0:
+- Description, README and in-game texts corrected: Carolina Field Almanac is NOT compatible with other weather or hay drying mods (the old text was wrong). Canada and Europe stations and European insurance are now listed. Old lines removed (4 % per wet day, hay curing days). Nothing changes in how the mod plays.
+
+Changelog 1.0.5.0:
+- New NOAA station Monroe 26 N (LA). Jones La and La-Ark Logging now pre-pick it; AR River Lowlands pre-picks Pine Bluff; BlackRiver Farms pre-picks Alexandria (towns confirmed by the Delta South Modding & Mapping team).
+
+Changelog 1.0.4.0:
+- 7 new NOAA weather stations near Delta South maps: Greenwood and Greenville (MS), Alexandria (LA), Jonesboro and Blytheville (AR), Cape Girardeau (MO) and Troy (AL). Nine Delta South maps now pre-pick their nearest station.
+- Map crops that are a type of corn, soybean or sorghum (non-GMO, eco, bio, food-grade, cattle-feed, early, new, organic, feed) now use the plain crop's weather numbers and crop insurance (cattle-feed beans are not insured, same as feed beans).
+
+Changelog 1.0.3.0:
+- The Field Cure box now shows only when you are on or near the cut hay (within 50 m), not anywhere on a large farmland. Missed notices and the rain-on-hay line still show everywhere.
+
+Changelog 1.0.2.0:
+- The Field Cure panel in a vehicle now sits bottom-left, right above the mini map, next to the Field Almanac map icons.
+
+Changelog 1.0.1.0:
+- Hay curing follows the game calendar (days per month), like the crop clocks: each game day stands for the real days of that month. Drying, dew, rain and respiration all scale the same way. Cut at the right time.]]></en>
+        <de><![CDATA[Mod für Farming Simulator.
+
+TESTVERSION - echtes Wetter und echte Pflanzenforschung. Jede Zahl hat eine genannte Quelle; ohne Quelle keine Wirkung.
+Einzelspieler und Mehrspieler (ein Spieler hostet im Spiel; Mehrspieler ist Beta).
+
+WETTER aus echten Klimadaten (1991-2020):
+- 426 NOAA-Stationen in allen 50 US-Bundesstaaten, 84 Stationen von Environment Canada (Alberta, Manitoba, Ontario, Quebec, Saskatchewan) und 815 Stationen der nationalen Wetterdienste Europas (Polen, Deutschland, Großbritannien, Irland, Frankreich)
+- Bundesstaat / Provinz / Land, Stadt und Stadtteil in den Spieleinstellungen (Allgemein) wählen - das Wetter folgt dieser Station
+- 81 Karten, die einen echten Ort nennen, wählen ihre nächste Station vor (du bestätigst sie)
+- Regen oder Sonne, Höchst- und Tiefstwert jedes Tages stammen aus 30 Jahren Messdaten dieser Station
+- Regen beginnt und dauert wie echter Regen dort (stündliche Regendaten): Gewitter am Nachmittag im Sommer, längerer Regen im Winter
+- Gewitter und Schnee kommen so oft vor, wie die Daten es für Monat und Temperatur zeigen
+- Luftfeuchte, Wind und Wolken folgen den stündlichen Klimanormalwerten
+- Die eigene Vorhersage, der Himmel, Regen und Temperaturen des Spiels folgen diesen Tagen
+
+FRÜCHTE (Test): jedes Feld hat ab der Aussaat seine eigene Wärmesummen-Uhr, gespeist vom echten Wetter.
+- Belegte Ertragsschäden bei der Ernte: Frost, Hitze, Hagel, Wind, Tornado, Hurrikan, Trockenheit, Staunässe, Überflutung, Regen auf reife Frucht und Ernteverzögerung (der Reiter Sources zeigt, welche Frucht welchen Schaden bekommt)
+- Offene Baumwolle auf dem Feld verliert 2,15 % je Zoll Regen (Larson et al. 1999)
+- Eine Regel bleibt aus, bis ihre Zahl belegt ist
+- Konsole: cfaCrops
+
+FIELD-ALMANAC-SEITE (ESC-Menü, Reiter auf Englisch): Notifications, Fields, Hay, Weather, Insurance, Settings, Sources
+- Versicherung wie echt: pro Frucht eine Police (Yield Protection, Revenue Protection, RP-HPE oder APH, 50-85 %) VOR der Aussaat kaufen. Jedes Feld dieser Frucht ist ab der Aussaat versichert, die Police verlängert sich jede Saison bis zur Kündigung. Auszahlung bei der Ernte. Zahlen: USDA RMA Summary of Business 2021-2025, Leitstaat. Polen, Deutschland und Frankreich nutzen die Versicherungszahlen ihres Landes; Großbritannien und Irland haben noch keine Ernteversicherung
+- Schadensschalter sind gesperrt, solange eine versicherte Frucht auf dem Feld steht
+- Settings: jeden Schaden ein- oder ausschalten, Meldungen und Anzeigedauer (Notices, Pop-up time), Mähwerk mit Aufbereiter (Mower conditions hay), Leichtmodus (Light mode)
+- Sources: jede Zahl im Mod und woher sie stammt
+
+HEU - FIELD CURE: Heu wie in den Carolinas: mähen, liegen lassen und von der Sonne auf dem Feld trocknen lassen. Kein Wender oder Trockner nötig.
+
+- Gemähtes Gras trocknet dort, wo es liegt, durch Sonne, Wärme und trockene Luft (USDA-ARS-Trocknungsforschung)
+- Nachts stoppt die Trocknung und Heu nimmt etwas Tau auf
+- Regen macht es wieder nass; durchnässtes Heu wird wieder zu nassem Gras
+- Regen und lange Nässe kosten Heu (Auswaschung und Atmungsverluste nach USDA-ARS-Forschung) - ein Schwad verschwindet nicht auf einmal
+- Wenden ist optional: gewendetes Gras trocknet für den Rest des Tages schneller, ein Schwad langsamer
+- Gras wird bei 20 % Feuchte zu Heu. Heu folgt dem Spielkalender: bei kurzen Monaten (1-3 Tage) heute mähen und bei trockenem Wetter morgen pressen
+- Auf einem Schwad stehend wird die Feuchte angezeigt
+
+FUNKTIONIERT ALLEIN - keine weiteren Mods nötig.
+NICHT KOMPATIBEL mit anderen Wetter- oder Heutrocknungs-Mods: Realistic Water & Soil Management, Moisture System, Improved Hay, Realistic Hay Drying oder Seasons-Mods, die Wetter oder Kalender ändern. Mit Realistic Water & Soil Management oder Moisture System sind CFA-Wetter, Wetterschäden, CFA-Versicherung und die Field-Cure-Heutrocknung aus. Nur einen Wetter-Mod verwenden.
+
+Konsole: cfcInfo
+
+Änderungen 1.0.6.0:
+- Beschreibung, README und Texte im Spiel korrigiert: Carolina Field Almanac ist NICHT kompatibel mit anderen Wetter- oder Heutrocknungs-Mods (der alte Text war falsch). Stationen in Kanada und Europa und die europäische Versicherung sind jetzt genannt. Alte Zeilen entfernt (4 % pro nassem Tag, Trocknungstage). Am Spielablauf ändert sich nichts.
+
+Änderungen 1.0.5.0:
+- Neue NOAA-Station Monroe 26 N (LA). Jones La und La-Ark Logging wählen sie jetzt vor; AR River Lowlands wählt Pine Bluff vor; BlackRiver Farms wählt Alexandria vor (Orte vom Delta South Modding & Mapping Team bestätigt).
+
+Änderungen 1.0.4.0:
+- 7 neue NOAA-Wetterstationen nahe den Delta-South-Karten: Greenwood und Greenville (MS), Alexandria (LA), Jonesboro und Blytheville (AR), Cape Girardeau (MO) und Troy (AL). Neun Delta-South-Karten wählen ihre nächste Station jetzt vor.
+- Kartenfrüchte, die eine Mais-, Soja- oder Sorghum-Sorte sind (non-GMO, eco, bio, food-grade, Rinderfutter, früh, neu, ökologisch, Futter), nutzen jetzt die Wetterwerte und die Ernteversicherung der normalen Frucht (Rinderfutter-Bohnen sind wie Futterbohnen nicht versichert).
+
+Änderungen 1.0.3.0:
+- Die Field-Cure-Anzeige erscheint jetzt nur auf oder nahe beim gemähten Heu (bis 50 m), nicht mehr überall auf einem großen Grundstück. Verpasste Meldungen und die Regen-auf-Heu-Zeile erscheinen weiter überall.
+
+Änderungen 1.0.2.0:
+- Die Field-Cure-Anzeige im Fahrzeug sitzt jetzt unten links, direkt über der Minikarte, neben den Field-Almanac-Kartensymbolen.
+
+Änderungen 1.0.1.0:
+- Das Trocknen von Heu folgt dem Spielkalender (Tage pro Monat), wie die Wachstumsuhren: jeder Spieltag steht für die echten Tage dieses Monats. Trocknen, Tau, Regen und Atmung laufen im gleichen Maßstab. Zur richtigen Zeit mähen.]]></de>
+        <fr><![CDATA[Mod pour Farming Simulator.
+
+VERSION DE TEST - vraie météo et vraie recherche agronomique. Chaque chiffre a une source nommée ; sans source, aucun effet.
+Solo et multijoueur (un joueur héberge dans le jeu ; le multijoueur est en bêta).
+
+MÉTÉO à partir de vrais relevés climatiques (1991-2020) :
+- 426 stations NOAA dans les 50 États américains, 84 stations d'Environnement Canada (Alberta, Manitoba, Ontario, Québec, Saskatchewan) et 815 stations des services météo nationaux d'Europe (Pologne, Allemagne, Royaume-Uni, Irlande, France)
+- Choisissez État / province / pays, ville et quartier dans les Paramètres du jeu (Général) - la météo suit cette station
+- 81 cartes qui nomment un lieu réel présélectionnent leur station la plus proche (vous la confirmez)
+- La pluie ou le soleil, les maximales et minimales de chaque jour viennent de 30 ans de relevés de cette station
+- La pluie commence et dure comme la vraie pluie de l'endroit (relevés horaires) : orages l'après-midi en été, pluies plus longues en hiver
+- Orages et neige arrivent aussi souvent que les relevés le montrent pour le mois et la température
+- Humidité, vent et nuages suivent les normales climatiques horaires
+- Les prévisions, le ciel, la pluie et les températures du jeu suivent ces jours
+
+CULTURES (test) : chaque champ a sa propre horloge de degrés-jours depuis le semis, alimentée par la vraie météo.
+- Dégâts de rendement sourcés à la récolte : gel, chaleur, grêle, vent, tornade, ouragan, sécheresse, excès d'eau, inondation, pluie sur une culture mûre et retard de récolte (l'onglet Sources indique quelles cultures subissent quels dégâts)
+- Le coton ouvert laissé au champ perd 2,15 % par pouce de pluie (Larson et al. 1999)
+- Une règle reste désactivée tant que son chiffre n'a pas de source
+- Console : cfaCrops
+
+PAGE FIELD ALMANAC (menu Échap, onglets en anglais) : Notifications, Fields, Hay, Weather, Insurance, Settings, Sources
+- Assurance comme en vrai : achetez une police par culture (Yield Protection, Revenue Protection, RP-HPE ou APH, 50-85 %) AVANT de semer. Chaque champ de cette culture est couvert au semis et la police se renouvelle chaque saison jusqu'à résiliation. Indemnités à la récolte. Chiffres : USDA RMA Summary of Business 2021-2025, État de référence. La Pologne, l'Allemagne et la France utilisent les chiffres d'assurance de leur pays ; le Royaume-Uni et l'Irlande n'ont pas encore d'assurance récolte
+- Les interrupteurs de dégâts sont verrouillés tant qu'une culture assurée est au champ
+- Settings : activer ou désactiver chaque type de dégât, avis et durée des fenêtres (Notices, Pop-up time), faucheuse-conditionneuse (Mower conditions hay), mode léger (Light mode)
+- Sources : chaque chiffre du mod et son origine
+
+FOIN - FIELD CURE : faites le foin comme dans les Carolines : fauchez, laissez sur place et laissez le soleil le sécher au champ. Ni faneuse ni séchoir nécessaires.
+
+- L'herbe fauchée sèche sur place grâce au soleil, à la chaleur et à l'air sec (recherche USDA-ARS sur le séchage)
+- Le séchage s'arrête la nuit et le foin reprend un peu de rosée
+- La pluie le mouille à nouveau ; le foin trempé redevient de l'herbe humide
+- La pluie et les longues périodes humides coûtent du foin (pertes par lessivage et respiration, recherche USDA-ARS) - un andain ne disparaît pas d'un coup
+- Le fanage est facultatif : l'herbe fanée sèche plus vite pour le reste de la journée, un andain sèche plus lentement
+- L'herbe devient du foin à 20 % d'humidité. Le foin suit le calendrier du jeu : avec des mois courts (1-3 jours), fauchez un jour et pressez le lendemain si le temps est sec
+- Placez-vous sur un andain pour voir son humidité
+
+FONCTIONNE SEUL - aucun autre mod nécessaire.
+NON COMPATIBLE avec d'autres mods de météo ou de séchage du foin : Realistic Water & Soil Management, Moisture System, Improved Hay, Realistic Hay Drying, ou mods de type Seasons qui changent la météo ou le calendrier. Avec Realistic Water & Soil Management ou Moisture System, la météo CFA, les dégâts météo, l'assurance CFA et le séchage du foin Field Cure sont désactivés. Utilisez un seul mod météo.
+
+Console : cfcInfo
+
+Journal des modifications 1.0.6.0 :
+- Description, README et textes du jeu corrigés : Carolina Field Almanac n'est PAS compatible avec d'autres mods de météo ou de séchage du foin (l'ancien texte était faux). Les stations du Canada et d'Europe et l'assurance européenne sont maintenant indiquées. Anciennes lignes supprimées (4 % par jour humide, jours de séchage). Rien ne change dans le jeu.
+
+Journal des modifications 1.0.5.0 :
+- Nouvelle station NOAA Monroe 26 N (LA). Jones La et La-Ark Logging la présélectionnent ; AR River Lowlands présélectionne Pine Bluff ; BlackRiver Farms présélectionne Alexandria (villes confirmées par l'équipe Delta South Modding & Mapping).
+
+Journal des modifications 1.0.4.0 :
+- 7 nouvelles stations météo NOAA près des cartes Delta South : Greenwood et Greenville (MS), Alexandria (LA), Jonesboro et Blytheville (AR), Cape Girardeau (MO) et Troy (AL). Neuf cartes Delta South présélectionnent maintenant leur station la plus proche.
+- Les cultures de carte qui sont une variété de maïs, de soja ou de sorgho (non-OGM, éco, bio, alimentaire, fourragère, précoce, nouvelle, biologique) utilisent maintenant les valeurs météo et l'assurance récolte de la culture de base (le soja fourrager pour bétail n'est pas assuré, comme le soja fourrager).
+
+Journal des modifications 1.0.3.0 :
+- Le panneau Field Cure ne s'affiche plus que sur le foin coupé ou à proximité (50 m), et non plus partout sur une grande parcelle. Les avis manqués et la ligne pluie sur le foin s'affichent toujours partout.
+
+Journal des modifications 1.0.2.0 :
+- Le panneau Field Cure dans un véhicule est maintenant en bas à gauche, juste au-dessus de la mini-carte, à côté des icônes Field Almanac.
+
+Journal des modifications 1.0.1.0 :
+- Le séchage du foin suit le calendrier du jeu (jours par mois), comme les horloges des cultures : chaque jour de jeu représente les vrais jours de ce mois. Séchage, rosée, pluie et respiration suivent la même échelle. Fauchez au bon moment.]]></fr>
+    </description>
+    <iconFilename>icon_CarolinaFieldAlmanac.dds</iconFilename>
+    <multiplayer supported="true"/>
+    <extraSourceFiles>
+        <sourceFile filename="scripts/CFAStationData.lua"/>
+        <sourceFile filename="scripts/CFANormals.lua"/>
+        <sourceFile filename="scripts/CFANormalsIntl.lua"/>
+        <sourceFile filename="scripts/CFAHourlyTemp.lua"/>
+        <sourceFile filename="scripts/CFADaily.lua"/>
+        <sourceFile filename="scripts/CFAStationDataCA.lua"/>
+        <sourceFile filename="scripts/CFAStationDataEU.lua"/>
+        <sourceFile filename="scripts/CFAWeather.lua"/>
+        <sourceFile filename="scripts/CFAInsurance.lua"/>
+        <sourceFile filename="scripts/CFASoilData.lua"/>
+        <sourceFile filename="scripts/CFAUsdaWinter.lua"/>
+        <sourceFile filename="scripts/CFAWinterClimate.lua"/>
+        <sourceFile filename="scripts/CFARegrowth.lua"/>
+        <sourceFile filename="scripts/CFAFrostData.lua"/>
+        <sourceFile filename="scripts/CFAWinter.lua"/>
+        <sourceFile filename="scripts/CFASources.lua"/>
+        <sourceFile filename="scripts/CFAPeanut.lua"/>
+        <sourceFile filename="scripts/CFASilage.lua"/>
+        <sourceFile filename="scripts/CFAStormData.lua"/>
+        <sourceFile filename="scripts/CFACrops.lua"/>
+        <sourceFile filename="scripts/CFAMenu.lua"/>
+        <sourceFile filename="scripts/CFAMultiplayer.lua"/>
+        <sourceFile filename="scripts/CarolinaFieldCure.lua"/>
+    </extraSourceFiles>
+    <l10n>
+        <text name="finance_cfaInsurancePremium"><en>CFA Insurance Premium</en><de>CFA Versicherung Prämie</de><fr>Assurance CFA - prime</fr></text>
+        <text name="finance_cfaInsuranceClaim"><en>CFA Insurance Claim</en><de>CFA Versicherung Leistung</de><fr>Assurance CFA - indemnité</fr></text>
+        <text name="cfc_hud_title"><en>Field Cure</en><de>Feldtrocknung</de><fr>Séchage au champ</fr></text>
+        <text name="cfc_hud_moisture"><en>Moisture</en><de>Feuchte</de><fr>Humidité</fr></text>
+        <text name="cfc_hud_target"><en>Hay at</en><de>Heu bei</de><fr>Foin à</fr></text>
+        <text name="cfc_hud_humidity"><en>Air humidity</en><de>Luftfeuchte</de><fr>Humidité de l'air</fr></text>
+        <text name="cfc_hud_status"><en>Status</en><de>Status</de><fr>État</fr></text>
+        <text name="cfc_status_curing"><en>Curing</en><de>Trocknet</de><fr>En séchage</fr></text>
+    </l10n>
+</modDesc>

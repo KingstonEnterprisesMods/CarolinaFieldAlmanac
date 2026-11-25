@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<!-- Carolina Field Almanac - menu page profiles (Kingston Enterprises). Built on the game's own fs25_ profiles. -->
+<GUIProfiles>
+    <Profile name="CFAHeaderIcon" extends="fs25_menuHeaderIcon">
+        <imageSliceId value="gui.icon_ingameMenu_statistics"/>
+        <imageColor value="$preset_fs25_colorMainDark"/>
+    </Profile>
+    <Profile name="CFATabContainer" extends="emptyPanel" with="anchorStretchingYStretchingX pivotTopLeft">
+        <position value="0px -90px"/>
+        <absoluteSizeOffset value="0px 90px"/>
+    </Profile>
+    <Profile name="CFAList" extends="emptyPanel" with="anchorStretchingYStretchingX pivotTopLeft">
+        <position value="0px -40px"/>
+        <absoluteSizeOffset value="0px 90px"/>
+    </Profile>
+    <Profile name="CFAListItem" extends="baseReference" with="anchorTopStretchingX alternating">
+        <height value="40px"/>
+        <imageColor value="$preset_fs25_colorGrey" />
+        <imageSelectedColor value="0.7 0.9 0.15 0.35" />
+        <alternateBackgroundColor value="$preset_fs25_colorGreyDark_50" />
+    </Profile>
+    <Profile name="CFACellLeft" extends="baseReference" with="anchorStretchingYLeft">
+        <textSize value="15px" />
+        <textBold value="true" />
+        <textAlignment value="left" />
+        <textVerticalAlignment value="middle"/>
+        <textOffset value="8px 0px" />
+        <textColor value="$preset_fs25_colorMainLight" />
+        <textSelectedColor value="$preset_fs25_colorMainLight" />
+        <textMaxNumLines value="2" />
+    </Profile>
+    <Profile name="CFACellCenter" extends="CFACellLeft">
+        <textAlignment value="center" />
+        <textOffset value="0px 0px" />
+    </Profile>
+    <Profile name="CFAHeaderText" extends="baseReference" with="anchorStretchingYLeft">
+        <textSize value="15px" />
+        <textBold value="true" />
+        <textUpperCase value="true" />
+        <textColor value="$preset_colorWhite_50" />
+        <textAlignment value="left" />
+        <textVerticalAlignment value="middle"/>
+        <textOffset value="8px 0px" />
+    </Profile>
+    <Profile name="CFAHeaderTextCenter" extends="CFAHeaderText">
+        <textAlignment value="center" />
+        <textOffset value="0px 0px" />
+    </Profile>
+    <Profile name="CFAEmptyText" extends="CFACellLeft" with="anchorTopLeft">
+        <position value="0px -60px"/>
+        <size value="1500px 40px"/>
+        <textColor value="$preset_colorWhite_50" />
+    </Profile>
+    <Profile name="CFASliderBox" extends="fs25_listSliderBox" with="anchorTopRight">
+    </Profile>
+    <Profile name="CFAListItemTall" extends="CFAListItem">
+        <height value="60px"/>
+    </Profile>
+    <Profile name="CFACellSmall" extends="CFACellLeft">
+        <textSize value="14px" />
+        <textMaxNumLines value="3" />
+    </Profile>
+    <Profile name="CFANoteText" extends="CFACellLeft" with="anchorBottomLeft">
+        <position value="0px 8px"/>
+        <size value="1500px 34px"/>
+        <textSize value="14px" />
+        <textColor value="$preset_colorWhite_50" />
+    </Profile>
+</GUIProfiles>
